@@ -1,0 +1,50 @@
+import { TIMEFRAME, TIMEFRAME_HIGHER, TOP_N } from "../libs/config.js";
+import { GetCandles, GetTopFutureVolume } from "../libs/exchange.js";
+import type { ITrade } from "../libs/interfaces.js";
+import { GetAllActiveTrades } from "../services/order.js";
+import { ThirdStarategy } from "../services/strategy.js";
+import { ClosePositions, OpenOrders } from "../services/trades.js";
+
+const id = process.argv[2]! as string;
+
+const tradedata: ITrade[] = [];
+const topVolumeData = await GetTopFutureVolume(TOP_N);
+const actives = await GetAllActiveTrades();
+const closetrades: { order: ITrade[]; price: number }[] = [];
+
+for (const symbol of topVolumeData) {
+  try {
+    const c1 = await GetCandles(symbol.symbol, TIMEFRAME, 200);
+    const c2 = await GetCandles(symbol.symbol, TIMEFRAME_HIGHER, 200);
+    if (c1.candles.length < 200 || c2.candles.length < 200) continue;
+
+    // const signal = await FirstStrategy(symbol.symbol, c1, c2);
+    const signal = ThirdStarategy(symbol.symbol, c1, c2);
+    if (!signal) continue;
+
+    const longs = actives.filter(
+      (a) => a.Pair.name === symbol.symbol && a.side === "buy",
+    );
+    const shorts = actives.filter(
+      (a) => a.Pair.name === symbol.symbol && a.side === "sell",
+    );
+    if (signal.side === "buy" && shorts.length !== 0) {
+      closetrades.push({ order: shorts, price: signal.open });
+    } else if (signal.side === "sell" && longs.length !== 0) {
+      closetrades.push({ order: longs, price: signal.open });
+    }
+
+    if (
+      (signal.side === "buy" && longs.length !== 0) ||
+      (signal.side === "sell" && shorts.length !== 0)
+    )
+      continue;
+    tradedata.push({ ...signal, botId: id });
+  } catch (err) {
+    console.log(err);
+    continue;
+  }
+}
+if (tradedata.length !== 0) await OpenOrders(tradedata);
+if (closetrades.length !== 0)
+  await Promise.all(closetrades.map((c) => ClosePositions(c.order, c.price)));

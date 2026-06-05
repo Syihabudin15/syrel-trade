@@ -7,12 +7,16 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum EDataStatus {
+  SEMUA
+  USER
+}
+
 enum ETransactionType {
   WITHDRAW
   DEPOSIT
   PROFIT
   LOSS
-  // BONUS
 }
 
 enum EMode {
@@ -20,9 +24,10 @@ enum EMode {
   OUT
 }
 
-enum EDataStatus {
-  SEMUA
-  USER
+enum EBotType {
+  TRADING
+  SCANNER
+  SMC
 }
 
 model Role {
@@ -105,6 +110,8 @@ model Trade {
   close_time DateTime?
   Pair       Pair      @relation(fields: [pairId], references: [id])
   pairId     String
+  Bot        Bot?      @relation(fields: [botId], references: [id])
+  botId      String?
 }
 
 model PumpScanner {
@@ -120,6 +127,28 @@ model PumpScanner {
   updated_at DateTime @updatedAt
   Pair       Pair     @relation(fields: [pairId], references: [id])
   pairId     String
+}
+
+model Bot {
+  id          String   @id @default(uuid())
+  name        String
+  description String?  @db.Text
+  active      Boolean  @default(false)
+  type        EBotType
+
+  status     Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  BotLogs    BotLog[]
+  Trades     Trade[]
+}
+
+model BotLog {
+  id     String   @id @default(uuid())
+  reason String
+  date   DateTime @default(now())
+  Bot    Bot      @relation(fields: [botId], references: [id])
+  botId  String
 }
 
 model LogActivities {

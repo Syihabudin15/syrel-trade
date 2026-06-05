@@ -1,6 +1,4 @@
-import moment from "moment";
 import type { ITrade } from "../libs/interfaces.js";
-import { SendTelegramMessage } from "../libs/messages.js";
 import { CalcPnl, CreateOrder, UpsertOrders } from "./order.js";
 import { error } from "node:console";
 
