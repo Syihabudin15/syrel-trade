@@ -246,8 +246,8 @@ export const TwoStarategy = (
 
   if (bearishDivergence) longScore -= 2;
   if (bullishDivergence) shortScore -= 2;
-  const validLong = longScore >= 8 && longScore > shortScore;
-  const validShort = shortScore >= 8 && shortScore > longScore;
+  const validLong = longScore >= 10 && longScore > shortScore;
+  const validShort = shortScore >= 10 && shortScore > longScore;
   const signal = validLong ? "LONG" : validShort ? "SHORT" : "WAIT";
 
   if (signal === "WAIT") return null;
