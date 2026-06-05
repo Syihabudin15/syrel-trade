@@ -18,7 +18,7 @@ app.use(
   }),
 );
 
-app.use("/api", async (req: Request, res: Response) => {
+app.use("/api/test", async (req: Request, res: Response) => {
   return res.status(200).json({
     msg: "OK",
     trade_bot: true,

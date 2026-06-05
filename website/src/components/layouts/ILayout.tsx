@@ -40,7 +40,7 @@ export default function ILayout() {
         width={260}
       >
         {/* Kita panggil komponen Sidebar di dalam drawer dengan kondisi tidak terkunci mengecil */}
-        <div className="[&_aside]:!flex [&_aside]:w-full">
+        <div className="[&_aside]:flex! [&_aside]:w-full">
           <Sidebar
             activeKey={currentMenu}
             onChangeKey={handleMenuChange}
@@ -57,7 +57,7 @@ export default function ILayout() {
           desktopCollapsed={desktopCollapsed}
         />
 
-        <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="flex-1 overflow-y-auto px-2 sm:px-4 lg:px-6 py-6">
           <div className="max-w-7xl mx-auto">
             <Outlet />
           </div>

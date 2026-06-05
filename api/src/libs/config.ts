@@ -1,4 +1,5 @@
 export const API_KEY = process.env.BITGET_API_KEY!;
+export const API_SECRET = process.env.BITGET_API_SECRET!;
 export const API_PASSWORD = process.env.BITGET_API_PASSWORD!;
 export const TIMEFRAME = process.env.BITGET_TIMEFRAME!;
 export const TIMEFRAME_HIGHER = process.env.BITGET_TIMEFRAME_HIGHER!;

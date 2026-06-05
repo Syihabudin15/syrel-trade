@@ -1,9 +1,12 @@
 import ccxt from "ccxt";
 import type { ICandle } from "./interfaces.js";
-import { RISK_PERCENT } from "./config.js";
+import { API_KEY, API_PASSWORD, API_SECRET, RISK_PERCENT } from "./config.js";
 
 export const exchange = new ccxt.bitget({
   enableRateLimit: true,
+  apiKey: API_KEY,
+  secret: API_SECRET,
+  password: API_PASSWORD,
   options: {
     defaultType: "swap", // "spot" atau "swap"
   },
@@ -42,7 +45,7 @@ export async function GetTopFutureVolume(limit = 30) {
         funding: ticker.info?.fundingRate,
       }))
       .sort((a, b) => b.volumeUSDT - a.volumeUSDT)
-      .slice(0, limit);
+      .slice(5, limit);
     return results;
   } catch (err) {
     console.log(

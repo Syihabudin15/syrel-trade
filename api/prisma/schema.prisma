@@ -53,15 +53,15 @@ model User {
   updated_at    DateTime        @default(now())
   Role          Role            @relation(fields: [roleId], references: [id], onUpdate: Cascade)
   roleId        String
-  logActivities LogActivities[]
-  wallets       Wallet[]
+  LogActivities LogActivities[]
+  Wallets       Wallet[]
 }
 
 model Wallet {
   id           String        @id @default(uuid())
   User         User          @relation(fields: [userId], references: [id])
   userId       String
-  transactions Transaction[]
+  Transactions Transaction[]
 }
 
 model Transaction {
@@ -82,10 +82,11 @@ model Pair {
   id   String @id @default(uuid())
   name String @unique
 
-  status     Boolean  @default(true)
-  created_at DateTime @default(now())
-  updated_at DateTime @default(now())
-  Trades     Trade[]
+  status       Boolean       @default(true)
+  created_at   DateTime      @default(now())
+  updated_at   DateTime      @default(now())
+  Trades       Trade[]
+  PumpScanners PumpScanner[]
 }
 
 model Trade {
@@ -103,6 +104,21 @@ model Trade {
   open_time  DateTime  @default(now())
   close_time DateTime?
   Pair       Pair      @relation(fields: [pairId], references: [id])
+  pairId     String
+}
+
+model PumpScanner {
+  id     String @id @default(uuid())
+  reason String @db.Text
+  open   Int
+  sl     Int
+  tp     Int
+  size   Int
+
+  status     Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  Pair       Pair     @relation(fields: [pairId], references: [id])
   pairId     String
 }
 

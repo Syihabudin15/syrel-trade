@@ -31,7 +31,7 @@ export const FirstStrategy = async (
   const stochRsiK = stockRSI.map((d) => d.k);
   const stochRsiD = stockRSI.map((d) => d.d);
   const close = LastNumber(c1.closes);
-  const prevclose = c1.closes.at(-2) || 0;
+  // const prevclose = c1.closes.at(-2) || 0;
 
   const emaFast = LastNumber(ema20);
   const emaMid = LastNumber(ema50);
@@ -245,8 +245,8 @@ export const TwoStarategy = (
 
   if (bearishDivergence) longScore -= 2;
   if (bullishDivergence) shortScore -= 2;
-  const validLong = longScore >= 7 && longScore > shortScore;
-  const validShort = shortScore >= 7 && shortScore > longScore;
+  const validLong = longScore >= 8 && longScore > shortScore;
+  const validShort = shortScore >= 8 && shortScore > longScore;
   const signal = validLong ? "LONG" : validShort ? "SHORT" : "WAIT";
 
   if (signal === "WAIT") return null;
