@@ -1,0 +1,14 @@
+# Mengizinkan semua robot pencari (Google, Bing, Yahoo, dll) untuk merayapi situs
+User-agent: *
+Allow: /
+
+# Melarang perayapan pada folder sistem internal dan file konfigurasi privat
+Disallow: /node_modules/
+Disallow: /dist/
+Disallow: /build/
+Disallow: /.env
+Disallow: /package.json
+Disallow: /vite.config.js
+
+# Lokasi Peta Situs Resmi (Sitemap) untuk mempercepat indeks 5 pilar layanan baru
+Sitemap: https://console.syreldigital.web.id/sitemap.xml

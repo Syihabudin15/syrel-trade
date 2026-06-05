@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+:root {
+  font-family: Cambria, Cochin, Georgia, Times, "Times New Roman", serif;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+:root {
+  --navy: #0f2244;
+  --navy2: #1a3460;
+  --gold: #c9a84c;
+  --gold2: #e8c96a;
+  --gold-light: #fdf6e3;
+  --cream: #faf8f4;
+  --muted: #64748b;
+}
+* {
+  box-sizing: border-box;
+}
