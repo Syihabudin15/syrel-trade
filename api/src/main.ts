@@ -83,7 +83,7 @@ Total PnL: <b>${closeds
     async () => {
       await MainTrade();
     },
-    1000 * 60 * 5,
+    1000 * 60 * 15,
   );
 })();
 
@@ -94,7 +94,7 @@ Total PnL: <b>${closeds
     async () => {
       await ValidateActiveTrades();
     },
-    1000 * 60 * 3,
+    1000 * 60 * 5,
   );
 })();
 

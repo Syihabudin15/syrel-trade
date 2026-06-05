@@ -9,7 +9,7 @@ export default defineConfig({
     proxy: {
       // Jika di local ada request ke /api, oper ke Node.js lokal
       "/api": {
-        target: "http://localhost:5002", // Sesuaikan dengan port Node.js lokalmu
+        target: "https://trade.syreldigital.web.id", // Sesuaikan dengan port Node.js lokalmu
         changeOrigin: true,
         secure: false,
       },
