@@ -1,14 +1,19 @@
-import type { ThemeConfig } from "antd";
+// components/themeconfig.ts
+import { theme, type ThemeConfig } from "antd";
 
-export const appTheme: ThemeConfig = {
+export const getAppTheme = (mode: "light" | "dark"): ThemeConfig => ({
+  algorithm: mode === "dark" ? theme.darkAlgorithm : theme.defaultAlgorithm,
+
   token: {
-    fontFamily: `"Cambria", "Times New Roman", serif`,
+    fontFamily: `"JetBrains Mono", monospace, "Cambria", "Times New Roman", serif`,
     colorPrimary: "#1677ff",
-    borderRadius: 14,
-    colorBgLayout: "#f4f7fb",
-    colorBgContainer: "#ffffff",
-    colorText: "#1f2937",
+    borderRadius: 10,
+
+    colorBgLayout: mode === "dark" ? "#020617" : "#f4f7fb",
+    colorBgContainer: mode === "dark" ? "#0f172a" : "#ffffff",
+    colorText: mode === "dark" ? "#e5e7eb" : "#1f2937",
   },
+
   components: {
     Button: {
       borderRadius: 999,
@@ -23,4 +28,4 @@ export const appTheme: ThemeConfig = {
       borderRadiusLG: 28,
     },
   },
-};
+});

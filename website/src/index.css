@@ -1,7 +1,10 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  font-family: Cambria, Cochin, Georgia, Times, "Times New Roman", serif;
+  font-family:
+    "JetBrains Mono", monospace, Cambria, Cochin, Georgia, Times,
+    "Times New Roman", serif;
   line-height: 1.5;
   font-weight: 400;
   font-synthesis: none;
@@ -27,4 +30,10 @@ body {
 }
 * {
   box-sizing: border-box;
+}
+.font-ibm {
+  font-family: "IBM Plex Sans", sans-serif;
+}
+.font-jet {
+  font-family: "JetBrains Mono", monospace, Cambria, Cochin, Georgia, Times;
 }

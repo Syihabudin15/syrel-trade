@@ -4,7 +4,8 @@ import express, { type Request, type Response } from "express";
 import cors from "cors";
 import moment from "moment";
 
-import TradeRoute from "./api/trades/route.js";
+import tradeRoute from "./api/trades/route.js";
+import botRoute from "./api/bot/route.js";
 
 const app = express();
 
@@ -26,7 +27,8 @@ app.use("/api/test", async (req: Request, res: Response) => {
   });
 });
 
-app.use("/api/trade", TradeRoute);
+app.use("/api/trade", tradeRoute);
+app.use("/api/bot", botRoute);
 
 const PORT = process.env.APP_PORT || 5002;
 app.listen(PORT, () => {

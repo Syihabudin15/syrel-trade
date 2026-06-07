@@ -1,3 +1,4 @@
+import moment from "moment";
 import { TIMEFRAME, TIMEFRAME_HIGHER, TOP_N } from "./libs/config.js";
 import { GetCandles, GetTopFutureVolume } from "./libs/exchange.js";
 import type { ITrade } from "./libs/interfaces.js";
@@ -37,6 +38,10 @@ const MainTrade = async () => {
       } else if (signal.side === "sell" && longs.length !== 0) {
         closetrades.push({ order: longs, price: signal.open });
       }
+      const find = actives.find((a) =>
+        moment(a.close_time).isAfter(moment().subtract(4, "hour")),
+      );
+      if (find) continue;
 
       if (
         (signal.side === "buy" && longs.length !== 0) ||

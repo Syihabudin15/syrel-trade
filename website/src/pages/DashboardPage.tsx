@@ -111,55 +111,16 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* HEADER SECTION */}
-      <div className="flex justify-between items-center mb-8 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-600 rounded-lg text-white">
-            <Activity size={24} />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800 m-0 leading-none">
-              Trading Bot Control
-            </h1>
-            <span className="text-sm text-gray-500">
-              Trend-Pulse & Dynamic Risk Engine
-            </span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <span
-              className={`font-semibold ${botActive ? "text-green-600" : "text-gray-400"}`}
-            >
-              {botActive ? "Bot Running" : "Bot Paused"}
-            </span>
-            <Switch
-              checked={botActive}
-              onChange={setBotActive}
-              className={botActive ? "bg-green-500" : "bg-gray-300"}
-            />
-          </div>
-          <Button
-            type={botActive ? "default" : "primary"}
-            danger={botActive}
-            icon={<Power size={16} />}
-          >
-            {botActive ? "Emergency Stop" : "Start Bot"}
-          </Button>
-        </div>
-      </div>
-
+    <div className="min-h-screen">
       {/* OVERVIEW CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <Card className="shadow-sm border-gray-100 hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-gray-500 mb-1">Total Balance</p>
+              <p className="text-gray-500 mb-1">Total Saldo</p>
               <h2 className="text-3xl font-bold text-gray-800">$10,450.00</h2>
             </div>
-            <div className="p-2 bg-green-50 text-green-600 rounded-lg">
+            <div className="p-2 text-green-600 rounded-lg">
               <DollarSign size={24} />
             </div>
           </div>
@@ -168,10 +129,10 @@ export default function DashboardPage() {
         <Card className="shadow-sm border-gray-100 hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-gray-500 mb-1">Today's PnL</p>
+              <p className="text-gray-500 mb-1">Total PnL</p>
               <h2 className="text-3xl font-bold text-green-600">+$124.50</h2>
             </div>
-            <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+            <div className="p-2 text-blue-600 rounded-lg">
               <TrendingUp size={24} />
             </div>
           </div>
@@ -180,11 +141,11 @@ export default function DashboardPage() {
         <Card className="shadow-sm border-gray-100 hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-gray-500 mb-1">Active Positions</p>
-              <h2 className="text-3xl font-bold text-gray-800">2</h2>
+              <p className="text-gray-500 mb-1">Estimasi PnL (Hari ini)</p>
+              <h2 className="text-3xl font-bold text-green-600">+$124.50</h2>
             </div>
-            <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
-              <BarChart2 size={24} />
+            <div className="p-2 text-blue-600 rounded-lg">
+              <TrendingUp size={24} />
             </div>
           </div>
         </Card>
@@ -192,11 +153,11 @@ export default function DashboardPage() {
         <Card className="shadow-sm border-gray-100 hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-gray-500 mb-1">Current Risk</p>
-              <h2 className="text-3xl font-bold text-orange-500">1.5%</h2>
+              <p className="text-gray-500 mb-1">Bot Aktif</p>
+              <h2 className="text-3xl font-bold text-gray-800">2</h2>
             </div>
-            <div className="p-2 bg-orange-50 text-orange-600 rounded-lg">
-              <ShieldAlert size={24} />
+            <div className="p-2  text-purple-600 rounded-lg">
+              <BarChart2 size={24} />
             </div>
           </div>
         </Card>

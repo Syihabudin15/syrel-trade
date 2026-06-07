@@ -4,7 +4,13 @@ import Header from "./Header";
 import { useState } from "react";
 import { Drawer } from "antd";
 
-export default function ILayout() {
+export default function ILayout({
+  theme,
+  changetheme,
+}: {
+  theme: "light" | "dark";
+  changetheme: React.Dispatch<React.SetStateAction<"light" | "dark">>;
+}) {
   const [desktopCollapsed, setDesktopCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -22,7 +28,7 @@ export default function ILayout() {
   };
 
   return (
-    <div className="min-h-screen flex bg-slate-50 ">
+    <div className="min-h-screen flex bg-slate-50 dark:bg-slate-950">
       {/* SIDEBAR: Versi Layar Gede (Desktop) */}
       <Sidebar
         activeKey={currentMenu}
@@ -36,8 +42,8 @@ export default function ILayout() {
         onClose={() => setMobileOpen(false)}
         open={mobileOpen}
         closable={false}
-        bodyStyle={{ padding: 0, backgroundColor: "#020617" }} // Menyatu dengan slate-950
-        width={260}
+        styles={{ body: { padding: 0, backgroundColor: "#020617" } }} // Menyatu dengan slate-950
+        size={260}
       >
         {/* Kita panggil komponen Sidebar di dalam drawer dengan kondisi tidak terkunci mengecil */}
         <div className="[&_aside]:flex! [&_aside]:w-full">
@@ -55,6 +61,8 @@ export default function ILayout() {
           onMenuToggleMobile={() => setMobileOpen(true)}
           onMenuToggleDesktop={() => setDesktopCollapsed(!desktopCollapsed)}
           desktopCollapsed={desktopCollapsed}
+          theme={theme}
+          changetheme={changetheme}
         />
 
         <main className="flex-1 overflow-y-auto px-2 sm:px-4 lg:px-6 py-6">
