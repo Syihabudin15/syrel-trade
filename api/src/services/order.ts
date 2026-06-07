@@ -149,8 +149,8 @@ export const ValidateActiveTrades = async () => {
           ),
       );
       SendTelegramMessage(`
-        📋 <b>Closed Trade</b>
-        ${updated.map((d) => `${d.side} (${d.reason}) ${d.Pair.name}: ${d.pnl.toFixed(2)}`).join("\n")}
+📋 <b>Closed Trade</b>
+${updated.map((d) => `${d.reason} (${d.side}) ${d.Pair.name}: ${d.pnl.toFixed(2)}`).join("\n")}
         `);
     }
   } catch (err) {

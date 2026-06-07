@@ -57,9 +57,9 @@ const MainTrade = async () => {
   if (tradedata.length !== 0) {
     await OpenOrders(tradedata);
     await SendTelegramMessage(`
-<b>🚀Order Dibuat</b>
+<b>🚀 Order Dibuat</b>
 Jumlah Order: <b>${tradedata.length}</b>
-Pairs : <b>${tradedata.map((t) => t.Pair.name).join("/")}</b>
+<b>${tradedata.map((t) => `${t.side} - ${t.Pair.name}: ${t.open}`).join("\n")}</b>
       `);
   }
   if (closetrades.length !== 0) {
@@ -71,7 +71,7 @@ Pairs : <b>${tradedata.map((t) => t.Pair.name).join("/")}</b>
 Pair:  <b>${closetrades
       .flatMap((c) => c.order)
       .map((t) => t.Pair.name)
-      .join("/")}</b>
+      .join("\n")}</b>
 Total PnL: <b>${closeds
       .flatMap((c) => c.flatMap((f) => f.pnl))
       .reduce((acc, curr) => acc + curr, 0)
