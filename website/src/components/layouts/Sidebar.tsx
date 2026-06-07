@@ -1,4 +1,3 @@
-import React from "react";
 import {
   CloudServerOutlined,
   CreditCardOutlined,
@@ -22,7 +21,7 @@ export default function Sidebar({
 }: SidebarProps) {
   const menuItems = [
     {
-      key: "dashboard",
+      key: "/",
       icon: <AppstoreOutlined className="text-lg!" />,
       label: "Dashboard Utama",
     },
@@ -33,9 +32,9 @@ export default function Sidebar({
       type: "group" as const,
       children: [
         {
-          key: "instances",
+          key: "bot",
           icon: <CloudServerOutlined />,
-          label: "Instance Saya",
+          label: "Bot Saya",
         },
         { key: "buy", icon: <ShoppingCartOutlined />, label: "Beli Produk" },
       ],
@@ -51,9 +50,9 @@ export default function Sidebar({
           label: "Langganan",
         },
         {
-          key: "history",
+          key: "trade",
           icon: <HistoryOutlined />,
-          label: "Riwayat Pembayaran",
+          label: "Daftar Trade",
         },
       ],
     },

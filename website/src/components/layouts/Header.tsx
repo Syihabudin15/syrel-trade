@@ -1,16 +1,13 @@
 import React from "react";
 import {
   BellOutlined,
-  SearchOutlined,
   MenuOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   SunOutlined,
   MoonOutlined,
 } from "@ant-design/icons";
-import { Input, Badge, Typography, Button } from "antd";
-
-const { Text } = Typography;
+import { Badge, Button } from "antd";
 
 interface HeaderProps {
   onMenuToggleMobile: () => void;

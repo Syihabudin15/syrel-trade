@@ -1,7 +1,9 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import ILayout from "./components/layouts/ILayout";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
-import ILayout from "./components/layouts/ILayout";
+import BotPage from "./pages/BotPage";
+import TradePage from "./pages/TradePage";
 
 type AppProps = {
   mode: "light" | "dark";
@@ -17,6 +19,8 @@ export default function App({ mode, setMode }: AppProps) {
           element={<ILayout theme={mode} changetheme={setMode} />}
         >
           <Route index element={<DashboardPage />} />
+          <Route path="/bot" element={<BotPage />} />
+          <Route path="/trade" element={<TradePage />} />
         </Route>
       </Routes>
     </BrowserRouter>

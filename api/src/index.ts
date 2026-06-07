@@ -6,6 +6,7 @@ import moment from "moment";
 
 import tradeRoute from "./api/trades/route.js";
 import botRoute from "./api/bot/route.js";
+import pairRoute from "./api/pair/route.js";
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.use(
     optionsSuccessStatus: 200,
   }),
 );
+app.use(express.json());
 
 app.use("/api/test", async (req: Request, res: Response) => {
   return res.status(200).json({
@@ -29,6 +31,7 @@ app.use("/api/test", async (req: Request, res: Response) => {
 
 app.use("/api/trade", tradeRoute);
 app.use("/api/bot", botRoute);
+app.use("/api/pair", pairRoute);
 
 const PORT = process.env.APP_PORT || 5002;
 app.listen(PORT, () => {

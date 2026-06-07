@@ -31,6 +31,12 @@ export const GET = async (req: Request, res: Response) => {
       skip,
       take: limit,
       orderBy: { open_time: "desc" },
+      include: {
+        Pair: true,
+        Bot: {
+          include: { BotLogs: true },
+        },
+      },
     });
     const profit = data
       .filter((d) => d.pnl > 0)

@@ -19,11 +19,11 @@ export default function ILayout({
   const currentMenu = location.pathname.split("/")[1] || "dashboard";
 
   const handleMenuChange = (key: string) => {
-    if (key === "dashboard") {
-      navigate("/dashboard");
-    } else {
-      navigate(`/dashboard/${key}`);
-    }
+    // if (key === "dashboard") {
+    //   navigate("/");
+    // } else {
+    navigate(`/${key}`);
+    // }
     setMobileOpen(false); // Otomatis tutup laci menu di mobile setelah diklik
   };
 
