@@ -258,7 +258,7 @@ export default function TradeHistory() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans">
+    <div className="min-h-screen  font-sans">
       {/* HEADER UTAMA */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
@@ -380,7 +380,7 @@ export default function TradeHistory() {
       </Row>
 
       {/* FILTER PANEL */}
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 mb-4 flex flex-wrap items-center justify-between gap-4">
+      <div className=" p-4 rounded-xl shadow-sm border border-slate-100 mb-4 flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
           <Input
             placeholder="Cari Pair (misal: BTC/USDT)..."
@@ -433,7 +433,7 @@ export default function TradeHistory() {
       </div>
 
       {/* MAIN DATA TABLE */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+      <div className=" rounded-xl shadow-sm border border-slate-100 overflow-hidden">
         <Table
           dataSource={filteredTrades}
           columns={columns}

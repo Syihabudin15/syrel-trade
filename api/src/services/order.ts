@@ -88,6 +88,21 @@ export function CalcPnl(
 
   return Number(((open - close) * amount).toFixed(4));
 }
+export const ValidateBeforeTrade = async (symbol?: string) => {
+  const where: Prisma.TradeWhereInput = {
+    open_time: {
+      gte: moment().subtract(4, "hour").toDate(),
+    },
+    ...(symbol && { Pair: { name: symbol } }),
+  };
+
+  const finds = await prisma.trade.findMany({
+    where,
+    include: { Pair: true },
+  });
+  return finds;
+};
+
 export const GetAllActiveTrades = async () => {
   const where: Prisma.TradeWhereInput = {
     close_time: null,
@@ -169,29 +184,29 @@ export const GetHourslyReport = async () => {
       where: { close_time: null },
       include: { Pair: true },
     });
-    const todays = await prisma.trade.findMany({
+    const alls = await prisma.trade.findMany({
       where: {
         close_time: { not: null },
-        open_time: {
-          gte: moment().startOf("day").toDate(),
-          lte: moment().endOf("day").toDate(),
-        },
+        // open_time: {
+        //   gte: moment().startOf("day").toDate(),
+        //   lte: moment().endOf("day").toDate(),
+        // },
       },
       include: { Pair: true },
     });
-    const PnL = todays.reduce((acc, curr) => acc + curr.pnl, 0);
+    const PnL = alls.reduce((acc, curr) => acc + curr.pnl, 0);
 
     SendTelegramMessage(`
-📊 <b>REPORT (4 HOURS)</b>
+📊 <b>REPORT TRADES</b>
 
 ✅ Active Trade: ${actives.length}
-📋 Closed Trade: ${todays.length}
-💰 PnL : ${PnL}
+📋 Closed Trade: ${alls.length}
+💰 PnL : ${PnL.toFixed(2)}
     `);
   } catch (err) {
     console.log(err);
     SendTelegramMessage(`
-⚠️ <b>HOURLY REPORT FAILED</b>
+⚠️ <b>REPORT FAILED</b>
 Time: <b>${new Date().toLocaleDateString()}</b>
 Error: <code>${err instanceof Error ? err.message : String(err)}</code>
     `);

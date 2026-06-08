@@ -17,7 +17,7 @@ export const GetSLTPPrice = (
   const entryPrice = price;
 
   const slDistance = atr * ATR_MULTIPLIER;
-  const riskRewardRatio = ATR_MULTIPLIER + 0.5;
+  const riskRewardRatio = ATR_MULTIPLIER + 0.3;
 
   let stopLossPrice = 0;
   let takeProfitPrice = 0;

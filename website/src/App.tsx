@@ -4,6 +4,7 @@ import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import BotPage from "./pages/BotPage";
 import TradePage from "./pages/TradePage";
+import BotDetailPage from "./pages/BotDetailPage";
 
 type AppProps = {
   mode: "light" | "dark";
@@ -20,6 +21,7 @@ export default function App({ mode, setMode }: AppProps) {
         >
           <Route index element={<DashboardPage />} />
           <Route path="/bot" element={<BotPage />} />
+          <Route path="/bot/detail/:id" element={<BotDetailPage />} />
           <Route path="/trade" element={<TradePage />} />
         </Route>
       </Routes>

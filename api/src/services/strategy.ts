@@ -278,6 +278,7 @@ export const TwoStarategy = (
     botId: null,
   };
 };
+
 export const ThirdStarategy = (
   symbol: string,
   c1: IGetCandles,

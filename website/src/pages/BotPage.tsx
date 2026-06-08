@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Table,
   Tag,
-  Card,
   Switch,
   Button,
   Modal,
@@ -22,13 +21,13 @@ import {
   Sliders,
   Layers,
   Search,
-  CheckCircle,
-  XCircle,
+  Eye,
 } from "lucide-react";
 import type { ColumnsType } from "antd/es/table";
 
 // Import interfaces dari file eksternal kamu
 import { IBot, EBotType } from "../libs/IInterfaces";
+import { Link } from "react-router-dom";
 
 export default function BotPage() {
   const [bots, setBots] = useState<IBot[]>([]);
@@ -68,7 +67,7 @@ export default function BotPage() {
       const res = await fetch(
         `/api/bot/${id}/${currentStatus ? "stop" : "start"}`,
         {
-          method: "PATCH",
+          method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ active: nextStatus, status: nextStatus }),
         },
@@ -175,7 +174,7 @@ export default function BotPage() {
       key: "bot_info",
       render: (_, record) => (
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-slate-100 rounded-lg text-slate-600">
+          <div className="p-2  rounded-lg text-slate-600">
             <Bot size={20} />
           </div>
           <div>
@@ -229,7 +228,15 @@ export default function BotPage() {
       key: "actions",
       align: "center",
       render: (_, record) => (
-        <Space size="middle">
+        <Space size="small">
+          <Tooltip title="Detail bot">
+            <Link to={`/bot/detail/${record.id}`}>
+              <Button
+                type="text"
+                icon={<Eye size={16} className="text-indigo-600" />}
+              />
+            </Link>
+          </Tooltip>
           <Tooltip title="Edit Parameter">
             <Button
               type="text"
@@ -255,7 +262,7 @@ export default function BotPage() {
   ];
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+    <div className=" rounded-2xl shadow-sm border border-slate-100 p-6">
       {/* CONTROL BAR (HEADER MANAJEMEN) */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
@@ -279,7 +286,7 @@ export default function BotPage() {
       </div>
 
       {/* FILTER CONTROLLER */}
-      <div className="flex flex-wrap gap-3 mb-4 bg-slate-50 p-3 rounded-xl border border-slate-100">
+      <div className="flex flex-wrap gap-3 mb-4 p-3 rounded-xl border border-slate-100">
         <Input
           placeholder="Cari nama atau deskripsi bot..."
           prefix={<Search size={14} className="text-slate-400" />}

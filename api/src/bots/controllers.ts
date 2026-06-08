@@ -17,7 +17,7 @@ export async function StartBot(bot: Bot) {
   const find = botFiles.find((f) => f === bot.id);
   if (!find) return { msg: "File tidak ditemukan", success: false };
 
-  const botFile = path.join(__dirname, find + ".js");
+  const botFile = path.join(process.cwd(), "dist", "src", "bots", `${find}.js`);
 
   const child = spawn("node", [botFile, bot.id], {
     stdio: ["ignore", "pipe", "pipe"],

@@ -75,6 +75,21 @@ export const DELETE = async (req: Request, res: Response) => {
   }
 };
 
+export const PATCH = async (req: Request, res: Response) => {
+  const id = req.params.id;
+
+  try {
+    const finds = await prisma.bot.findFirst({
+      where: { id: id as string },
+      include: { BotLogs: true, Trades: { include: { Pair: true } } },
+    });
+    return ResponseServer(res, 200, { msg: "Berhasil", data: finds });
+  } catch (err) {
+    console.log(err);
+    return ResponseServer(res, 500, { msg: err });
+  }
+};
+
 export const STARTBOT = async (req: Request, res: Response) => {
   const id = req.params.id;
 

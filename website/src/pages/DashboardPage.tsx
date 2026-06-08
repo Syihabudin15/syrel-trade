@@ -74,7 +74,7 @@ export default function App() {
     const newStatus = !currentStatus;
     try {
       const response = await fetch(`/api/bot/${id}`, {
-        method: "PATCH", // atau PUT sesuaikan dengan backend kamu
+        method: "PUT", // atau PUT sesuaikan dengan backend kamu
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ active: newStatus, status: newStatus }),
       });
@@ -293,9 +293,9 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 font-sans">
+    <div className="min-h-screen  p-6 font-sans">
       {/* HEADER */}
-      <header className="mb-8 flex items-center justify-between bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+      <header className="mb-8 flex items-center justify-between  p-6 rounded-2xl shadow-sm border border-slate-100">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
             <Activity className="text-indigo-600 animate-pulse" size={28} />
@@ -426,7 +426,7 @@ export default function App() {
                           </div>
 
                           {/* Bot Logs */}
-                          <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 mt-2">
+                          <div className=" p-3 rounded-lg border border-slate-100 mt-2">
                             <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400 flex items-center gap-1 mb-1">
                               <AlertCircle size={10} /> Last System Log
                             </div>
@@ -450,7 +450,7 @@ export default function App() {
                     <h2 className="text-lg font-bold text-slate-800 mb-4">
                       Pair Core Matrix (`IPair[]`)
                     </h2>
-                    <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-2">
+                    <div className=" rounded-xl shadow-sm border border-slate-100 p-2">
                       <Table
                         dataSource={pairs.slice(0, 5)}
                         columns={pairColumns}
