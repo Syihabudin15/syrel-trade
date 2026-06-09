@@ -69,15 +69,13 @@ export default function BotPage() {
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ active: nextStatus, status: nextStatus }),
+          body: JSON.stringify({ active: nextStatus }),
         },
       );
       if (!res.ok) throw new Error();
 
       setBots((prev) =>
-        prev.map((b) =>
-          b.id === id ? { ...b, active: nextStatus, status: nextStatus } : b,
-        ),
+        prev.map((b) => (b.id === id ? { ...b, active: nextStatus } : b)),
       );
       message.success(`Bot ${nextStatus ? "diaktifkan" : "dinonaktifkan"}`);
     } catch {
