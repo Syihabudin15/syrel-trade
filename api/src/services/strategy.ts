@@ -321,20 +321,20 @@ export const ThirdStarategy = (
   const stochBullish = StockHasticCross(
     { fast: stochRsiK.at(-1) || 0, slow: stochRsiK.at(-2) || 0 },
     { fast: stochRsiD.at(-1) || 0, slow: stochRsiD.at(-2) || 0 },
-    { over: 40, under: 60 },
+    { over: 30, under: 70 },
     "over",
   );
 
   const stochBearish = StockHasticCross(
     { fast: stochRsiK.at(-1) || 0, slow: stochRsiK.at(-2) || 0 },
     { fast: stochRsiD.at(-1) || 0, slow: stochRsiD.at(-2) || 0 },
-    { over: 40, under: 60 },
+    { over: 30, under: 70 },
     "under",
   );
 
   const atrPercent = (atr / close) * 100;
-  const validVolatility = atrPercent >= 0.3 && atrPercent <= 1.8;
-  const volumeSpike = isVolumeSpike(c1.volumes, 20, 1.2);
+  const validVolatility = atrPercent >= 0.3 && atrPercent <= 1.2;
+  const volumeSpike = isVolumeSpike(c1.volumes, 20, 1.4);
   if (!validVolatility || !volumeSpike) return null;
 
   const structure = getMarketStructure(c1.highs, c1.lows);
@@ -342,14 +342,24 @@ export const ThirdStarategy = (
   const bullishDivergence = hasBullishDivergence(c1.lows, rsi14);
   const bearishDivergence = hasBearishDivergence(c1.highs, rsi14);
 
-  const bullishCandle = close > open;
-  const bearishCandle = close < open;
-  const atrDistance = Math.abs(close - emaFast);
-  const maxPullbackDistance = atr * 0.8;
+  const candleBody = Math.abs(close - open);
+  const candleRange = LastNumber(c1.highs) - LastNumber(c1.lows);
 
-  const pullbackLong = close > emaMid && atrDistance <= maxPullbackDistance;
+  const strongBullishCandle =
+    close > open && candleBody >= candleRange * 0.4 && close > emaFast;
 
-  const pullbackShort = close < emaMid && atrDistance <= maxPullbackDistance;
+  const strongBearishCandle =
+    close < open && candleBody >= candleRange * 0.4 && close < emaFast;
+
+  const pullbackLong =
+    close > emaMid &&
+    close >= emaFast &&
+    Math.abs(close - emaFast) <= atr * 0.7;
+
+  const pullbackShort =
+    close < emaMid &&
+    close <= emaFast &&
+    Math.abs(close - emaFast) <= atr * 0.7;
 
   let longScore = 0;
   let shortScore = 0;
@@ -370,8 +380,8 @@ export const ThirdStarategy = (
   if (structure === "BULLISH") longScore += 1;
   if (structure === "BEARISH") shortScore += 1;
 
-  const hasLongTrigger = stochBullish || pullbackLong || bullishCandle;
-  const hasShortTrigger = stochBearish || pullbackShort || bearishCandle;
+  // const hasLongTrigger = stochBullish && pullbackLong && strongBullishCandle;
+  // const hasShortTrigger = stochBearish && pullbackShort && strongBearishCandle;
 
   if (stochBullish) longScore += 1;
   if (stochBearish) shortScore += 1;
@@ -379,15 +389,36 @@ export const ThirdStarategy = (
   if (pullbackLong) longScore += 1;
   if (pullbackShort) shortScore += 1;
 
-  if (bullishCandle) longScore += 1;
-  if (bearishCandle) shortScore += 1;
+  if (strongBullishCandle) longScore += 1;
+  if (strongBearishCandle) shortScore += 1;
 
   if (bearishDivergence) longScore -= 2;
   if (bullishDivergence) shortScore -= 2;
 
-  const validLong = longScore >= 8 && longScore > shortScore && hasLongTrigger;
+  const longTriggers = [stochBullish, pullbackLong, strongBullishCandle];
+
+  const shortTriggers = [stochBearish, pullbackShort, strongBearishCandle];
+
+  const longTriggerCount = longTriggers.filter(Boolean).length;
+  const shortTriggerCount = shortTriggers.filter(Boolean).length;
+
+  const validLong =
+    longScore >= 8 &&
+    longScore > shortScore &&
+    htfTrendLong &&
+    emaBullish &&
+    rsiBullish &&
+    longTriggerCount >= 2 &&
+    !bearishDivergence;
+
   const validShort =
-    shortScore >= 8 && shortScore > longScore && hasShortTrigger;
+    shortScore >= 8 &&
+    shortScore > longScore &&
+    htfTrendShort &&
+    emaBearish &&
+    rsiBearish &&
+    shortTriggerCount >= 2 &&
+    !bullishDivergence;
 
   const signal = validLong ? "LONG" : validShort ? "SHORT" : "WAIT";
 
