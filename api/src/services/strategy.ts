@@ -1,8 +1,11 @@
+import { MAX_LEV } from "../libs/config.js";
 import {
   CalculateATR,
+  CalculateBB,
   CalculateEMA,
   CalculateRSI,
   CalculateStockRSI,
+  CalculateVWAPV2,
 } from "../libs/indicators.js";
 import type { IGetCandles, ITrade } from "../libs/interfaces.js";
 import { GetSLTPPrice } from "./risks.js";
@@ -445,6 +448,119 @@ export const ThirdStarategy = (
     pnl: 0,
     reason: null,
     lev: pricing.lev,
+    close: null,
+    close_time: null,
+    botId: null,
+  };
+};
+
+export const MeanReversionStrategy = (
+  symbol: string,
+  c1: IGetCandles,
+): ITrade | null => {
+  // 1. Kalkulasi Indikator Dasar
+  const rsi14 = CalculateRSI(c1.closes, 14);
+  const atr14 = CalculateATR(c1.highs, c1.lows, c1.closes, 14);
+
+  // Asumsi Anda memiliki fungsi kalkulasi Bollinger Bands & VWAP
+  const bb = CalculateBB(c1.closes, 20, 2);
+  const vwap = CalculateVWAPV2(c1.highs, c1.lows, c1.closes, c1.volumes);
+
+  // Ambil nilai data terakhir (candle yang baru saja close)
+  const close = LastNumber(c1.closes);
+  const open = LastNumber(c1.opens);
+  const low = LastNumber(c1.lows);
+  const high = LastNumber(c1.highs);
+
+  const rsi = LastNumber(rsi14);
+  const atr = LastNumber(atr14);
+  const upperBand = LastNumber(bb.upper);
+  const lowerBand = LastNumber(bb.lower);
+  const middleBand = LastNumber(bb.middle); // Biasanya SMA 20
+  const currentVwap = LastNumber(vwap);
+
+  // 2. Filter Volatilitas Ekstrem (Menghindari "Pisau Jatuh" tanpa dasar)
+  const atrPercent = (atr / close) * 100;
+  if (atrPercent < 0.1) return null; // Pasar terlalu mati
+
+  // 3. Logika Pemicu Entri (Entry Triggers)
+
+  // LONG TRIGGER: Harga menusuk band bawah, tapi ditarik naik lagi (rejection)
+  const pricePiercedLowerBand = low < lowerBand;
+  const closedInsideLowerBand = close > lowerBand;
+  const bullishRejectionCandle =
+    close > open && close - open > (high - low) * 0.4; // Body hijau lumayan solid
+  const oversoldRSI = rsi < 35; // RSI di bawah 35
+
+  const validLong =
+    pricePiercedLowerBand &&
+    closedInsideLowerBand &&
+    bullishRejectionCandle &&
+    oversoldRSI;
+
+  // SHORT TRIGGER: Harga menusuk band atas, tapi ditarik turun lagi (rejection)
+  const pricePiercedUpperBand = high > upperBand;
+  const closedInsideUpperBand = close < upperBand;
+  const bearishRejectionCandle =
+    close < open && open - close > (high - low) * 0.4; // Body merah solid
+  const overboughtRSI = rsi > 65; // RSI di atas 65
+
+  const validShort =
+    pricePiercedUpperBand &&
+    closedInsideUpperBand &&
+    bearishRejectionCandle &&
+    overboughtRSI;
+
+  const signal = validLong ? "LONG" : validShort ? "SHORT" : "WAIT";
+  if (signal === "WAIT") return null;
+
+  // 4. Perhitungan Stop Loss & Take Profit (Fokus Win Rate)
+  const entryPrice = close;
+  let stopLossPrice = 0;
+  let takeProfitPrice = 0;
+
+  // Menggunakan fungsi bawaan Anda atau logika khusus di bawah ini:
+  if (signal === "LONG") {
+    // SL diletakkan sedikit di bawah Low candle penolakan (ditambah sedikit buffer ATR agar tidak gampang tersentuh)
+    stopLossPrice = low - atr * 0.5;
+    // TP diletakkan di Middle Band atau VWAP (mana yang lebih dekat untuk probabilitas hit lebih tinggi)
+    takeProfitPrice = Math.min(middleBand, currentVwap);
+  } else {
+    // SL diletakkan sedikit di atas High candle penolakan
+    stopLossPrice = high + atr * 0.5;
+    // TP diletakkan di Middle Band atau VWAP
+    takeProfitPrice = Math.max(middleBand, currentVwap);
+  }
+
+  // Jika Risk/Reward (jarak ke TP vs jarak ke SL) terlalu buruk, batalkan sinyal
+  const risk = Math.abs(entryPrice - stopLossPrice);
+  const reward = Math.abs(takeProfitPrice - entryPrice);
+  if (reward / risk < 0.8) return null; // Minimal RRR 1:0.8 untuk strategi high win rate
+
+  // Hitung amount berdasarkan resiko
+  const RISK_PERCENT = 1; // Contoh 1% risk
+  const riskUSDT = 10 * (RISK_PERCENT / 100);
+  const amount = riskUSDT / risk;
+
+  return {
+    id: "",
+    pairId: "",
+    Pair: {
+      name: symbol,
+      id: "",
+      status: true,
+      created_at: new Date(),
+      updated_at: new Date(),
+    },
+    side: signal === "LONG" ? "buy" : "sell",
+    open_time: new Date(),
+    open: Number(entryPrice.toFixed(4)),
+    amount: Number(amount.toFixed(6)),
+    sl_price: Number(stopLossPrice.toFixed(4)),
+    tp_price: Number(takeProfitPrice.toFixed(4)),
+    pnl: 0,
+    reason: null,
+    lev: MAX_LEV,
     close: null,
     close_time: null,
     botId: null,
