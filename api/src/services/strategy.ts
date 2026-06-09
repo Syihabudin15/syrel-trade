@@ -289,7 +289,7 @@ export const ThirdStarategy = (
   const ema200 = CalculateEMA(c1.closes, 200);
   const rsi14 = CalculateRSI(c1.closes, 14);
   const atr14 = CalculateATR(c1.highs, c1.lows, c1.closes, 14);
-  const stockRSI = CalculateStockRSI(c1.closes, 14, 14, 3, 3);
+  const stockRSI = CalculateStockRSI(c1.closes, 9, 9, 3, 3);
 
   const stochRsiK = stockRSI.map((d) => d.k);
   const stochRsiD = stockRSI.map((d) => d.d);
@@ -333,8 +333,8 @@ export const ThirdStarategy = (
   );
 
   const atrPercent = (atr / close) * 100;
-  const validVolatility = atrPercent >= 0.3 && atrPercent <= 1.2;
-  const volumeSpike = isVolumeSpike(c1.volumes, 20, 1.4);
+  const validVolatility = atrPercent >= 0.1 && atrPercent <= 0.8;
+  const volumeSpike = isVolumeSpike(c1.volumes, 20, 1.8);
   if (!validVolatility || !volumeSpike) return null;
 
   const structure = getMarketStructure(c1.highs, c1.lows);
@@ -354,12 +354,12 @@ export const ThirdStarategy = (
   const pullbackLong =
     close > emaMid &&
     close >= emaFast &&
-    Math.abs(close - emaFast) <= atr * 0.7;
+    Math.abs(close - emaFast) <= atr * 1.2;
 
   const pullbackShort =
     close < emaMid &&
     close <= emaFast &&
-    Math.abs(close - emaFast) <= atr * 0.7;
+    Math.abs(close - emaFast) <= atr * 1.2;
 
   let longScore = 0;
   let shortScore = 0;
