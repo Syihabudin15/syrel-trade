@@ -73,20 +73,21 @@ export default function App() {
   const handleToggleBot = async (id: string, currentStatus: boolean) => {
     const newStatus = !currentStatus;
     try {
-      const response = await fetch(`/api/bot/${id}`, {
-        method: "PUT", // atau PUT sesuaikan dengan backend kamu
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ active: newStatus, status: newStatus }),
-      });
+      const response = await fetch(
+        `/api/bot/${id}/${currentStatus ? "stop" : "start"}`,
+        {
+          method: "PUT", // atau PUT sesuaikan dengan backend kamu
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ active: newStatus }),
+        },
+      );
 
       if (!response.ok) throw new Error("Network response was not ok");
 
       // Update state lokal jika API berhasil
       setBots((prev) =>
         prev.map((bot) =>
-          bot.id === id
-            ? { ...bot, active: newStatus, status: newStatus }
-            : bot,
+          bot.id === id ? { ...bot, active: newStatus } : bot,
         ),
       );
       message.success(

@@ -266,9 +266,7 @@ export default function BotDetail({ botId, onBack }: BotDetailProps) {
           )}
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-slate-900">
-                {botData.name}
-              </h1>
+              <h1 className="text-xl font-bold ">{botData.name}</h1>
               <Tag color={botData.active ? "success" : "default"}>
                 {botData.active ? "RUNNING" : "IDLE"}
               </Tag>

@@ -140,7 +140,7 @@ export default function TradeHistory() {
       key: "market_system",
       render: (_, record) => (
         <div>
-          <div className="font-bold text-slate-800 text-sm tracking-wide">
+          <div className="font-bold  text-sm tracking-wide">
             {record.Pair?.name || "N/A"}
           </div>
           <div className="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
@@ -261,7 +261,7 @@ export default function TradeHistory() {
     <div className="min-h-screen  font-sans">
       {/* HEADER UTAMA */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+        <h1 className="text-2xl font-bold  flex items-center gap-2">
           <Clock className="text-indigo-600" size={26} /> Historical Trade
           Ledger
         </h1>

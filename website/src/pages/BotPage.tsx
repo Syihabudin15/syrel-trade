@@ -176,9 +176,7 @@ export default function BotPage() {
             <Bot size={20} />
           </div>
           <div>
-            <div className="font-bold text-slate-800 text-sm">
-              {record.name}
-            </div>
+            <div className="font-bold  text-sm">{record.name}</div>
             <div className="text-xs text-slate-400 max-w-62.5 truncate">
               {record.description || "Tanpa deskripsi"}
             </div>
@@ -264,7 +262,7 @@ export default function BotPage() {
       {/* CONTROL BAR (HEADER MANAJEMEN) */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+          <h2 className="text-xl font-bold  flex items-center gap-2">
             <Sliders size={22} className="text-indigo-600" /> Bot Core
             Management
           </h2>

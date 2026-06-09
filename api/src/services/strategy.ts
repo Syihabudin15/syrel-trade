@@ -459,96 +459,160 @@ export const MeanReversionStrategy = (
   c1: IGetCandles,
   c2: IGetCandles,
 ): ITrade | null => {
-  // 1. Kalkulasi Indikator Dasar
+  if (
+    c1.closes.length < 50 ||
+    c1.highs.length < 50 ||
+    c1.lows.length < 50 ||
+    c1.opens.length < 50 ||
+    c1.volumes.length < 50
+  ) {
+    return null;
+  }
+
   const rsi14 = CalculateRSI(c1.closes, 14);
   const atr14 = CalculateATR(c1.highs, c1.lows, c1.closes, 14);
-
-  // Asumsi Anda memiliki fungsi kalkulasi Bollinger Bands & VWAP
   const bb = CalculateBB(c1.closes, 20, 2);
   const vwap = CalculateVWAPV2(c1.highs, c1.lows, c1.closes, c1.volumes);
 
-  // Ambil nilai data terakhir (candle yang baru saja close)
   const close = LastNumber(c1.closes);
   const open = LastNumber(c1.opens);
   const low = LastNumber(c1.lows);
   const high = LastNumber(c1.highs);
 
-  // 2. FILTER TREN BESAR (Menggunakan c2 - TF 30 Menit)
-  // Kita gunakan EMA 50 di TF 30m untuk mengetahui arah arus besar
-  const htfEma50 = CalculateEMA(c2.closes, 50);
-  const htfClose = LastNumber(c2.closes);
-  const htfBullish = htfClose > LastNumber(htfEma50);
-  const htfBearish = htfClose < LastNumber(htfEma50);
-
-  // 3. Logika Pemicu Entri yang Diperketat
-  const candleBody = Math.abs(close - open);
-  const totalRange = high - low;
-
   const rsi = LastNumber(rsi14);
   const atr = LastNumber(atr14);
+
   const upperBand = LastNumber(bb.upper);
   const lowerBand = LastNumber(bb.lower);
-  const middleBand = LastNumber(bb.middle); // Biasanya SMA 20
-  const currentVwap = LastNumber(vwap);
+  const middleBand = LastNumber(bb.middle);
+  const lastVWAP = LastNumber(vwap);
 
-  // 2. Filter Volatilitas Ekstrem (Menghindari "Pisau Jatuh" tanpa dasar)
-  const atrPercent = (atr / close) * 100;
-  if (atrPercent < 0.1) return null; // Pasar terlalu mati
+  if (
+    !close ||
+    !open ||
+    !low ||
+    !high ||
+    !rsi ||
+    !atr ||
+    !upperBand ||
+    !lowerBand ||
+    !middleBand ||
+    !lastVWAP
+  ) {
+    return null;
+  }
 
-  // LONG: Harga harus menembus band bawah, close di dalam, RSI < 25 (Ekstrem), dan HTF tidak sedang longsor
-  const pricePiercedLowerBand = low < lowerBand;
-  const closedInsideLowerBand = close > lowerBand;
-  const deepOversoldRSI = rsi <= 25; // Diperketat dari 35 ke 25
-  const strongRejectionLong = close > open && candleBody >= totalRange * 0.4;
+  if (atr <= 0) return null;
 
-  // SHORT: Harga harus menembus band atas, close di bawah, RSI > 75 (Ekstrem), dan HTF tidak sedang terbang
-  const pricePiercedUpperBand = high > upperBand;
-  const closedInsideUpperBand = close < upperBand;
-  const deepOverboughtRSI = rsi >= 75; // Diperketat dari 65 ke 75
-  const strongRejectionShort = close < open && candleBody >= totalRange * 0.4;
+  // ===============================
+  // 1. RSI dibuat lebih realistis
+  // ===============================
+  const oversoldRSI = rsi <= 40;
+  const overboughtRSI = rsi >= 60;
 
+  // ===============================
+  // 2. Bollinger Band dengan toleransi
+  // ===============================
+  const bandTolerance = atr * 0.25;
+
+  const touchLowerBand = low <= lowerBand + bandTolerance;
+  const touchUpperBand = high >= upperBand - bandTolerance;
+
+  // ===============================
+  // 3. Candle rejection lebih longgar
+  // ===============================
+  const totalRange = high - low;
+  if (totalRange <= 0) return null;
+
+  const body = Math.abs(close - open);
+  const lowerWick = Math.min(open, close) - low;
+  const upperWick = high - Math.max(open, close);
+
+  const lowerWickRatio = lowerWick / totalRange;
+  const upperWickRatio = upperWick / totalRange;
+  const bodyRatio = body / totalRange;
+
+  const bullishReject =
+    lowerWickRatio >= 0.25 &&
+    bodyRatio <= 0.75 &&
+    close > low + totalRange * 0.35;
+
+  const bearishReject =
+    upperWickRatio >= 0.25 &&
+    bodyRatio <= 0.75 &&
+    close < high - totalRange * 0.35;
+
+  // ===============================
+  // 4. HTF filter dibuat tidak terlalu membunuh sinyal
+  // ===============================
+  let htfBullish = true;
+  let htfBearish = true;
+
+  if (c2.closes.length >= 200) {
+    const htfEma200 = CalculateEMA(c2.closes, 200);
+    const htfClose = LastNumber(c2.closes);
+    const ema200 = LastNumber(htfEma200);
+
+    if (htfClose && ema200) {
+      htfBullish = htfClose > ema200;
+      htfBearish = htfClose < ema200;
+    }
+  }
+
+  // Untuk mean reversion, jangan terlalu strict dengan HTF.
+  // Long tetap boleh selama RSI oversold + sentuh lower BB.
+  // Tapi kalau HTF bearish, candle rejection wajib ada.
   const validLong =
-    pricePiercedLowerBand &&
-    closedInsideLowerBand &&
-    deepOversoldRSI &&
-    strongRejectionLong &&
-    htfBullish;
+    touchLowerBand && oversoldRSI && (bullishReject || htfBullish);
+
   const validShort =
-    pricePiercedUpperBand &&
-    closedInsideUpperBand &&
-    deepOverboughtRSI &&
-    strongRejectionShort &&
-    htfBearish;
+    touchUpperBand && overboughtRSI && (bearishReject || htfBearish);
 
   const signal = validLong ? "LONG" : validShort ? "SHORT" : "WAIT";
   if (signal === "WAIT") return null;
 
-  // 4. Perhitungan Stop Loss & Take Profit (Fokus Win Rate)
   const entryPrice = close;
+
   let stopLossPrice = 0;
   let takeProfitPrice = 0;
 
-  // Menggunakan fungsi bawaan Anda atau logika khusus di bawah ini:
   if (signal === "LONG") {
-    // SL diletakkan sedikit di bawah Low candle penolakan (ditambah sedikit buffer ATR agar tidak gampang tersentuh)
-    stopLossPrice = low - atr * 1.5;
-    // TP diletakkan di Middle Band atau VWAP (mana yang lebih dekat untuk probabilitas hit lebih tinggi)
-    takeProfitPrice = middleBand;
-  } else {
-    // SL diletakkan sedikit di atas High candle penolakan
-    stopLossPrice = high + atr * 1.5;
-    // TP diletakkan di Middle Band atau VWAP
-    takeProfitPrice = middleBand;
+    stopLossPrice = low - atr * 1.2;
+
+    // Ambil target yang berada di atas entry
+    const targets = [middleBand, lastVWAP].filter((tp) => tp > entryPrice);
+
+    if (targets.length === 0) return null;
+
+    // Pilih target terdekat agar win rate lebih tinggi
+    takeProfitPrice = Math.min(...targets);
   }
 
-  // Jika Risk/Reward (jarak ke TP vs jarak ke SL) terlalu buruk, batalkan sinyal
-  const risk = Math.abs(entryPrice - stopLossPrice);
-  // const reward = Math.abs(takeProfitPrice - entryPrice);
-  // if (reward / risk < 0.8) return null; // Minimal RRR 1:0.8 untuk strategi high win rate
+  if (signal === "SHORT") {
+    stopLossPrice = high + atr * 1.2;
 
-  // Hitung amount berdasarkan resiko
+    // Ambil target yang berada di bawah entry
+    const targets = [middleBand, lastVWAP].filter((tp) => tp < entryPrice);
+
+    if (targets.length === 0) return null;
+
+    // Pilih target terdekat agar win rate lebih tinggi
+    takeProfitPrice = Math.max(...targets);
+  }
+
+  const risk = Math.abs(entryPrice - stopLossPrice);
+  const reward = Math.abs(takeProfitPrice - entryPrice);
+
+  if (risk <= 0 || reward <= 0) return null;
+
+  // Jangan terlalu ketat, tapi tetap hindari setup yang sangat buruk
+  const rr = reward / risk;
+  if (rr < 0.35) return null;
+
   const riskUSDT = 10 * (RISK_PERCENT / 100);
   const amount = riskUSDT / risk;
+
+  if (!isFinite(amount) || amount <= 0) return null;
 
   return {
     id: "",
@@ -567,7 +631,7 @@ export const MeanReversionStrategy = (
     sl_price: Number(stopLossPrice.toFixed(4)),
     tp_price: Number(takeProfitPrice.toFixed(4)),
     pnl: 0,
-    reason: null,
+    reason: `Mean Reversion ${signal} | RSI=${rsi.toFixed(2)} | RR=${rr.toFixed(2)}`,
     lev: MAX_LEV,
     close: null,
     close_time: null,
