@@ -1,4 +1,4 @@
-import { MAX_LEV } from "../libs/config.js";
+import { MAX_LEV, RISK_PERCENT } from "../libs/config.js";
 import {
   CalculateATR,
   CalculateBB,
@@ -522,23 +522,22 @@ export const MeanReversionStrategy = (
   // Menggunakan fungsi bawaan Anda atau logika khusus di bawah ini:
   if (signal === "LONG") {
     // SL diletakkan sedikit di bawah Low candle penolakan (ditambah sedikit buffer ATR agar tidak gampang tersentuh)
-    stopLossPrice = low - atr * 0.5;
+    stopLossPrice = low - atr * 0.8;
     // TP diletakkan di Middle Band atau VWAP (mana yang lebih dekat untuk probabilitas hit lebih tinggi)
     takeProfitPrice = Math.min(middleBand, currentVwap);
   } else {
     // SL diletakkan sedikit di atas High candle penolakan
-    stopLossPrice = high + atr * 0.5;
+    stopLossPrice = high + atr * 0.8;
     // TP diletakkan di Middle Band atau VWAP
     takeProfitPrice = Math.max(middleBand, currentVwap);
   }
 
   // Jika Risk/Reward (jarak ke TP vs jarak ke SL) terlalu buruk, batalkan sinyal
   const risk = Math.abs(entryPrice - stopLossPrice);
-  const reward = Math.abs(takeProfitPrice - entryPrice);
-  if (reward / risk < 0.8) return null; // Minimal RRR 1:0.8 untuk strategi high win rate
+  // const reward = Math.abs(takeProfitPrice - entryPrice);
+  // if (reward / risk < 0.8) return null; // Minimal RRR 1:0.8 untuk strategi high win rate
 
   // Hitung amount berdasarkan resiko
-  const RISK_PERCENT = 1; // Contoh 1% risk
   const riskUSDT = 10 * (RISK_PERCENT / 100);
   const amount = riskUSDT / risk;
 

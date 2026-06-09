@@ -1,5 +1,5 @@
 import "dotenv/config";
-// import "./main.js";
+import "./main.js";
 import express, { type Request, type Response } from "express";
 import cors from "cors";
 import moment from "moment";

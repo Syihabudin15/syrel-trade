@@ -123,29 +123,36 @@ export const ValidateActiveTrades = async () => {
     });
     const updated: ITrade[] = [];
     for (const trade of data) {
-      const currPrice = await GetCurrentPrice(trade.Pair.name);
-      if (!currPrice || !trade.sl_price || !trade.tp_price) continue;
+      const ticker = await GetCurrentPrice(trade.Pair.name);
+      if (!ticker || !trade.sl_price || !trade.tp_price) continue;
       if (trade.side === "buy") {
-        if (currPrice > trade.tp_price || currPrice < trade.sl_price) {
+        if (ticker.high > trade.tp_price || ticker.low < trade.sl_price) {
           updated.push({
             ...trade,
-            close: currPrice,
+            close:
+              ticker.high > trade.tp_price ? trade.tp_price : trade.sl_price,
             close_time: new Date(),
-            reason: currPrice > trade.tp_price ? "TP" : "SL",
-            pnl: CalcPnl(trade.side, trade.open, currPrice, trade.amount),
+            reason: ticker.price > trade.tp_price ? "TP" : "SL",
+            pnl: CalcPnl(
+              trade.side,
+              trade.open,
+              ticker.high > trade.tp_price ? trade.tp_price : trade.sl_price,
+              trade.amount,
+            ),
           });
         }
       } else {
-        if (currPrice < trade.tp_price || currPrice > trade.sl_price) {
+        if (ticker.low < trade.tp_price || ticker.high > trade.sl_price) {
           updated.push({
             ...trade,
-            close: currPrice,
+            close:
+              ticker.low < trade.tp_price ? trade.tp_price : trade.sl_price,
             close_time: new Date(),
-            reason: currPrice < trade.tp_price ? "TP" : "SL",
+            reason: ticker.low < trade.tp_price ? "TP" : "SL",
             pnl: CalcPnl(
               trade.side as "buy" | "sell",
               trade.open,
-              currPrice,
+              ticker.low < trade.tp_price ? trade.tp_price : trade.sl_price,
               trade.amount,
             ),
           });

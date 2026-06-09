@@ -106,12 +106,16 @@ export async function GetCandles(
   }
 }
 
-export async function GetCurrentPrice(symbol: string): Promise<number | null> {
+export async function GetCurrentPrice(symbol: string) {
   try {
     await ensureMarketsLoaded();
     const ticker = await exchange.fetchTicker(symbol);
 
-    return ticker?.last || null;
+    return {
+      price: ticker?.last ?? 0,
+      high: ticker.high ?? 0,
+      low: ticker.low ?? 0,
+    };
   } catch (err) {
     console.log(
       `GetCurrentPrice(${symbol}) error:`,
