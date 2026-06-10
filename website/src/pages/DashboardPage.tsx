@@ -473,9 +473,9 @@ export default function App() {
               </span>
             ),
             children: (
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+              <div className="rounded-2xl shadow-sm border border-slate-100 p-6">
                 <div className="mb-4">
-                  <h2 className="text-lg font-bold text-slate-800">
+                  <h2 className="text-lg font-bold">
                     Historical Operational Ledger (`ITrade[]`)
                   </h2>
                   <p className="text-xs text-slate-400 mt-0.5">

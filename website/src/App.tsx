@@ -5,6 +5,7 @@ import DashboardPage from "./pages/DashboardPage";
 import BotPage from "./pages/BotPage";
 import TradePage from "./pages/TradePage";
 import BotDetailPage from "./pages/BotDetailPage";
+import PumpScannerPage from "./pages/PumpScannerPage";
 
 type AppProps = {
   mode: "light" | "dark";
@@ -23,6 +24,7 @@ export default function App({ mode, setMode }: AppProps) {
           <Route path="/bot" element={<BotPage />} />
           <Route path="/bot/detail/:id" element={<BotDetailPage />} />
           <Route path="/trade" element={<TradePage />} />
+          <Route path="/bot/pump_scanner/:id" element={<PumpScannerPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

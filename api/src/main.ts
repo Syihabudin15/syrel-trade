@@ -1,4 +1,5 @@
 import { GetHourslyReport, ValidateActiveTrades } from "./services/order.js";
+import { ValidatePumpScanner } from "./services/scanner.js";
 
 (async () => {
   await ValidateActiveTrades();
@@ -7,7 +8,18 @@ import { GetHourslyReport, ValidateActiveTrades } from "./services/order.js";
     async () => {
       await ValidateActiveTrades();
     },
-    1000 * 60 * 3,
+    1000 * 60 * 1,
+  );
+})();
+
+(async () => {
+  await ValidatePumpScanner();
+  await new Promise((resolve) => setTimeout(resolve, 1000 * 60 * 3));
+  setInterval(
+    async () => {
+      await ValidatePumpScanner();
+    },
+    1000 * 60 * 60 * 4,
   );
 })();
 

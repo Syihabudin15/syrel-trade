@@ -226,7 +226,13 @@ export default function BotPage() {
       render: (_, record) => (
         <Space size="small">
           <Tooltip title="Detail bot">
-            <Link to={`/bot/detail/${record.id}`}>
+            <Link
+              to={
+                record.type === "TRADING"
+                  ? `/bot/detail/${record.id}`
+                  : `/bot/pump_scanner/${record.id}`
+              }
+            >
               <Button
                 type="text"
                 icon={<Eye size={16} className="text-indigo-600" />}
@@ -312,6 +318,7 @@ export default function BotPage() {
         loading={loading}
         pagination={{ pageSize: 8 }}
         className="border border-slate-100 rounded-xl overflow-hidden"
+        scroll={{ x: true }}
       />
 
       {/* DYNAMIC MODAL (FORM TAMBAH / EDIT) */}

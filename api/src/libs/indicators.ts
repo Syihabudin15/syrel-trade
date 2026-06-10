@@ -6,7 +6,6 @@ import {
   rsi,
   atr,
   stochasticrsi,
-  bollingerbands,
   BollingerBands,
   VWAP,
 } from "technicalindicators";

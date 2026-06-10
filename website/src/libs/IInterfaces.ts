@@ -47,6 +47,24 @@ export interface ITrade {
   botId: string | null;
 }
 
+export interface IPumpScanner {
+  id: string;
+  reason: string | null;
+  open: number;
+  sl: number;
+  tp: number;
+  summary: string;
+  active: boolean;
+
+  status: boolean;
+  created_at: Date;
+  updated_at: Date;
+  Pair: IPair;
+  pairId: string;
+  Bot: IBot;
+  botId: string;
+}
+
 export interface IBotLog {
   id: string;
   reason: string;

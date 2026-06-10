@@ -5,7 +5,7 @@ import prisma from "../libs/prisma.js";
 
 type BotProcessMap = Record<string, ChildProcess>;
 const runningBots: BotProcessMap = {};
-const botFiles = ["tradebot1", "tradebot2", "tradebot3"];
+const botFiles = ["tradebot1", "tradebot2", "tradebot3", "tradebot4"];
 
 export async function StartBot(bot: Bot) {
   if (runningBots[bot.id])
@@ -40,19 +40,21 @@ export async function StartBot(bot: Bot) {
 
   child.on("close", async (code) => {
     delete runningBots[bot.id];
-    await Promise.all([
-      prisma.bot.update({
-        where: { id: bot.id },
-        data: { active: false, updated_at: new Date() },
-      }),
-      prisma.botLog.create({
-        data: {
-          reason: `Bot berhenti dengan kode status ${code}`,
-          date: new Date(),
-          botId: bot.id,
-        },
-      }),
-    ]);
+    if (code) {
+      await Promise.all([
+        prisma.bot.update({
+          where: { id: bot.id },
+          data: { active: false, updated_at: new Date() },
+        }),
+        prisma.botLog.create({
+          data: {
+            reason: `Bot berhenti dengan kode status ${code}`,
+            date: new Date(),
+            botId: bot.id,
+          },
+        }),
+      ]);
+    }
   });
 
   await Promise.all([

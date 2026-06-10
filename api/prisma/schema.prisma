@@ -115,18 +115,21 @@ model Trade {
 }
 
 model PumpScanner {
-  id     String @id @default(uuid())
-  reason String @db.Text
-  open   Int
-  sl     Int
-  tp     Int
-  size   Int
+  id      String  @id @default(uuid())
+  reason  String?
+  open    Int
+  sl      Int
+  tp      Int
+  summary String  @db.Text
+  active  Boolean @default(true)
 
   status     Boolean  @default(true)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   Pair       Pair     @relation(fields: [pairId], references: [id])
   pairId     String
+  Bot        Bot      @relation(fields: [botId], references: [id])
+  botId      String
 }
 
 model Bot {
@@ -136,11 +139,12 @@ model Bot {
   active      Boolean  @default(false)
   type        EBotType
 
-  status     Boolean  @default(true)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  BotLogs    BotLog[]
-  Trades     Trade[]
+  status       Boolean       @default(true)
+  created_at   DateTime      @default(now())
+  updated_at   DateTime      @updatedAt
+  BotLogs      BotLog[]
+  Trades       Trade[]
+  PumpScanners PumpScanner[]
 }
 
 model BotLog {

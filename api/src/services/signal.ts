@@ -40,8 +40,16 @@ export const StockHasticCross = (
   }
 };
 
-const average = (arr: number[]) =>
+export const average = (arr: number[]) =>
   arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+export const crossedOver = (
+  prevA: number,
+  nowA: number,
+  prevB: number,
+  nowB: number,
+) => {
+  return prevA <= prevB && nowA > nowB;
+};
 
 export const isVolumeSpike = (
   volumes: number[],

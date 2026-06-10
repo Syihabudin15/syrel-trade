@@ -1,4 +1,5 @@
-import { MAX_LEV, RISK_PERCENT } from "../libs/config.js";
+import type { Bot } from "@prisma/client";
+import { MAX_LEV, RISK_PERCENT, TIMEFRAME_HIGHER } from "../libs/config.js";
 import {
   CalculateATR,
   CalculateBB,
@@ -10,6 +11,8 @@ import {
 import type { IGetCandles, ITrade } from "../libs/interfaces.js";
 import { GetSLTPPrice } from "./risks.js";
 import {
+  average,
+  crossedOver,
   FindDefaultTrend,
   getMarketStructure,
   hasBearishDivergence,
@@ -936,5 +939,147 @@ export const RangeBreakoutCompressionStrategy = (
     close: null,
     close_time: null,
     botId: null,
+  };
+};
+
+// const LIMIT = 150;
+
+const MIN_VOLUME_SPIKE = 2.5;
+const MIN_SCORE_ALERT = 9;
+// const COOLDOWN_MS = 30 * 60 * 1000;
+
+export const MarketScanner = (
+  symbol: string,
+  c1: IGetCandles, // TF utama, contoh 5m
+  c2: IGetCandles,
+) => {
+  const closes = c1.closes;
+  const highs = c1.highs;
+  const lows = c1.lows;
+  const volumes = c1.volumes;
+  const htfCloses = c2.closes;
+
+  const ema20 = CalculateEMA(closes, 20);
+  const ema50 = CalculateEMA(closes, 50);
+  const htfEma20 = CalculateEMA(htfCloses, 20);
+  const htfEma50 = CalculateEMA(htfCloses, 50);
+  const rsi = CalculateRSI(closes, 14);
+  const atr = CalculateATR(highs, lows, closes, 14);
+  const stochRsi = CalculateStockRSI(closes, 14, 14, 3, 3);
+
+  if (
+    ema20.length < 3 ||
+    ema50.length < 3 ||
+    rsi.length < 3 ||
+    atr.length < 1 ||
+    stochRsi.length < 3 ||
+    htfEma20.length < 2 ||
+    htfEma50.length < 2
+  ) {
+    return null;
+  }
+
+  const last = c1.candles[c1.candles.length - 1];
+  const prev = c1.candles[c1.candles.length - 2];
+
+  const price = last.close;
+
+  const nowEma20 = ema20[ema20.length - 1];
+  const prevEma20 = ema20[ema20.length - 2];
+
+  const nowEma50 = ema50[ema50.length - 1];
+  const prevEma50 = ema50[ema50.length - 2];
+
+  const nowRsi = rsi[rsi.length - 1];
+  const prevRsi = rsi[rsi.length - 2];
+
+  const nowAtr = atr[atr.length - 1];
+
+  const nowStoch = stochRsi[stochRsi.length - 1];
+  const prevStoch = stochRsi[stochRsi.length - 2];
+
+  const nowHtfEma20 = htfEma20[htfEma20.length - 1];
+  const nowHtfEma50 = htfEma50[htfEma50.length - 1];
+
+  const avgVolume20 = average(volumes.slice(-21, -1));
+  const volumeSpike = avgVolume20 > 0 ? last.volume / avgVolume20 : 0;
+
+  let score = 0;
+  const reasons: string[] = [];
+
+  if (volumeSpike >= MIN_VOLUME_SPIKE) {
+    score += 3;
+    reasons.push(`Volume spike ${volumeSpike.toFixed(2)}x`);
+  }
+  if (crossedOver(prev.close, price, prevEma50, nowEma50)) {
+    score += 3;
+    reasons.push("Break EMA50");
+  }
+
+  if (price > nowEma20 && price > nowEma50) {
+    score += 2;
+    reasons.push("Harga di atas EMA20 & EMA50");
+  }
+
+  if (nowEma20 > nowEma50 && prevEma20 <= prevEma50) {
+    score += 3;
+    reasons.push("EMA20 golden cross EMA50");
+  } else if (nowEma20 > nowEma50) {
+    score += 1;
+    reasons.push("EMA20 sudah di atas EMA50");
+  }
+
+  if (prevRsi < 45 && nowRsi > 50) {
+    score += 2;
+    reasons.push("RSI break ke atas 50");
+  } else if (nowRsi > 50 && nowRsi < 70) {
+    score += 1;
+    reasons.push("RSI bullish belum overbought");
+  }
+
+  if (
+    prevStoch.k <= prevStoch.d &&
+    nowStoch.k > nowStoch.d &&
+    nowStoch.k < 80
+  ) {
+    score += 2;
+    reasons.push("Stoch RSI golden cross");
+  }
+
+  if (nowHtfEma20 > nowHtfEma50) {
+    score += 2;
+    reasons.push(`HTF ${TIMEFRAME_HIGHER} bullish`);
+  }
+
+  if (price > prev.high) {
+    score += 1;
+    reasons.push("Break high candle sebelumnya");
+  }
+  const sl = price - nowAtr * 1.5;
+  // const tp1 = price + nowAtr * 2;
+  const tp2 = price + nowAtr * 3;
+  if (score < MIN_SCORE_ALERT) return null;
+  return {
+    id: "",
+    reason: null,
+    open: price,
+    sl: sl,
+    tp: tp2,
+    summary: JSON.stringify(reasons),
+    active: true,
+
+    status: true,
+    created_at: new Date(),
+    updated_at: new Date(),
+    Pair: {
+      id: "",
+      name: symbol,
+      status: true,
+      created_at: new Date(),
+      updated_at: new Date(),
+    },
+    pairId: "",
+    botId: "",
+    Bot: {} as Bot,
   };
 };

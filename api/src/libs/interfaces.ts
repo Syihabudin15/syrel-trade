@@ -1,4 +1,4 @@
-import type { Pair, Trade } from "@prisma/client";
+import type { Bot, Pair, PumpScanner, Trade } from "@prisma/client";
 
 export interface ICandle {
   open: number;
@@ -11,6 +11,10 @@ export interface ICandle {
 
 export interface ITrade extends Trade {
   Pair: Pair;
+}
+export interface IPumpScanner extends PumpScanner {
+  Pair: Pair;
+  Bot: Bot;
 }
 
 export interface IGetCandles {
