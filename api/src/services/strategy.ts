@@ -409,7 +409,7 @@ export const ThirdStarategy = (
   const shortTriggerCount = shortTriggers.filter(Boolean).length;
 
   const validLong =
-    longScore >= 7 &&
+    longScore >= 6 &&
     longScore > shortScore &&
     htfTrendLong &&
     emaBullish &&
@@ -418,7 +418,7 @@ export const ThirdStarategy = (
     !bearishDivergence;
 
   const validShort =
-    shortScore >= 7 &&
+    shortScore >= 6 &&
     shortScore > longScore &&
     htfTrendShort &&
     emaBearish &&
