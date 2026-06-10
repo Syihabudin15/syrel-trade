@@ -84,7 +84,7 @@ export async function StopBot(bot: Bot) {
         id: bot.id,
       },
       data: {
-        status: false,
+        active: false,
         updated_at: new Date(),
       },
     }),

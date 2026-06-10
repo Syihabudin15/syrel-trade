@@ -132,7 +132,7 @@ export const ValidateActiveTrades = async () => {
             close:
               ticker.high > trade.tp_price ? trade.tp_price : trade.sl_price,
             close_time: new Date(),
-            reason: ticker.price > trade.tp_price ? "TP" : "SL",
+            reason: ticker.high > trade.tp_price ? "TP" : "SL",
             pnl: CalcPnl(
               trade.side,
               trade.open,

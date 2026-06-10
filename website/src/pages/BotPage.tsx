@@ -69,7 +69,7 @@ export default function BotPage() {
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ active: nextStatus }),
+          // body: JSON.stringify({ active: nextStatus }),
         },
       );
       if (!res.ok) throw new Error();

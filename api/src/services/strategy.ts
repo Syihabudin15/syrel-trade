@@ -406,7 +406,7 @@ export const ThirdStarategy = (
   const shortTriggerCount = shortTriggers.filter(Boolean).length;
 
   const validLong =
-    longScore >= 8 &&
+    longScore >= 7 &&
     longScore > shortScore &&
     htfTrendLong &&
     emaBullish &&
@@ -415,7 +415,7 @@ export const ThirdStarategy = (
     !bearishDivergence;
 
   const validShort =
-    shortScore >= 8 &&
+    shortScore >= 7 &&
     shortScore > longScore &&
     htfTrendShort &&
     emaBearish &&
@@ -507,13 +507,13 @@ export const MeanReversionStrategy = (
   // ===============================
   // 1. RSI dibuat lebih realistis
   // ===============================
-  const oversoldRSI = rsi <= 40;
-  const overboughtRSI = rsi >= 60;
+  const oversoldRSI = rsi <= 35;
+  const overboughtRSI = rsi >= 65;
 
   // ===============================
   // 2. Bollinger Band dengan toleransi
   // ===============================
-  const bandTolerance = atr * 0.25;
+  const bandTolerance = atr * 0.2;
 
   const touchLowerBand = low <= lowerBand + bandTolerance;
   const touchUpperBand = high >= upperBand - bandTolerance;
@@ -532,15 +532,33 @@ export const MeanReversionStrategy = (
   const upperWickRatio = upperWick / totalRange;
   const bodyRatio = body / totalRange;
 
+  // const bullishReject =
+  //   lowerWickRatio >= 0.25 &&
+  //   bodyRatio <= 0.75 &&
+  //   close > low + totalRange * 0.35;
+
+  // const bearishReject =
+  //   upperWickRatio >= 0.25 &&
+  //   bodyRatio <= 0.75 &&
+  //   close < high - totalRange * 0.35;
   const bullishReject =
-    lowerWickRatio >= 0.25 &&
-    bodyRatio <= 0.75 &&
-    close > low + totalRange * 0.35;
+    lowerWickRatio >= 0.35 &&
+    bodyRatio <= 0.55 &&
+    close > open &&
+    close > lowerBand;
 
   const bearishReject =
-    upperWickRatio >= 0.25 &&
-    bodyRatio <= 0.75 &&
-    close < high - totalRange * 0.35;
+    upperWickRatio >= 0.35 &&
+    bodyRatio <= 0.55 &&
+    close < open &&
+    close < upperBand;
+
+  const reclaimLowerBand = touchLowerBand && close > lowerBand && close > open;
+
+  // ===============================
+  // 4. HTF filter dibuat tidak terlalu membunuh sinyal
+  // ===============================
+  const rejectUpperBand = touchUpperBand && close < upperBand && close < open;
 
   // ===============================
   // 4. HTF filter dibuat tidak terlalu membunuh sinyal
@@ -554,19 +572,32 @@ export const MeanReversionStrategy = (
     const ema200 = LastNumber(htfEma200);
 
     if (htfClose && ema200) {
-      htfBullish = htfClose > ema200;
-      htfBearish = htfClose < ema200;
+      htfBullish = htfClose >= ema200 * 0.995;
+      htfBearish = htfClose <= ema200 * 1.005;
     }
   }
 
   // Untuk mean reversion, jangan terlalu strict dengan HTF.
   // Long tetap boleh selama RSI oversold + sentuh lower BB.
   // Tapi kalau HTF bearish, candle rejection wajib ada.
+  // const validLong =
+  //   touchLowerBand && oversoldRSI && (bullishReject || htfBullish);
+
+  // const validShort =
+  //   touchUpperBand && overboughtRSI && (bearishReject || htfBearish);
   const validLong =
-    touchLowerBand && oversoldRSI && (bullishReject || htfBullish);
+    oversoldRSI &&
+    touchLowerBand &&
+    reclaimLowerBand &&
+    bullishReject &&
+    htfBullish;
 
   const validShort =
-    touchUpperBand && overboughtRSI && (bearishReject || htfBearish);
+    overboughtRSI &&
+    touchUpperBand &&
+    rejectUpperBand &&
+    bearishReject &&
+    htfBearish;
 
   const signal = validLong ? "LONG" : validShort ? "SHORT" : "WAIT";
   if (signal === "WAIT") return null;
@@ -577,7 +608,7 @@ export const MeanReversionStrategy = (
   let takeProfitPrice = 0;
 
   if (signal === "LONG") {
-    stopLossPrice = low - atr * 1.2;
+    stopLossPrice = Math.min(low, lowerBand) - atr * 1.5;
 
     // Ambil target yang berada di atas entry
     const targets = [middleBand, lastVWAP].filter((tp) => tp > entryPrice);
@@ -589,7 +620,7 @@ export const MeanReversionStrategy = (
   }
 
   if (signal === "SHORT") {
-    stopLossPrice = high + atr * 1.2;
+    stopLossPrice = Math.max(high, upperBand) + atr * 1.5;
 
     // Ambil target yang berada di bawah entry
     const targets = [middleBand, lastVWAP].filter((tp) => tp < entryPrice);
@@ -607,7 +638,7 @@ export const MeanReversionStrategy = (
 
   // Jangan terlalu ketat, tapi tetap hindari setup yang sangat buruk
   const rr = reward / risk;
-  if (rr < 0.35) return null;
+  if (rr < 0.45) return null;
 
   const riskUSDT = 10 * (RISK_PERCENT / 100);
   const amount = riskUSDT / risk;

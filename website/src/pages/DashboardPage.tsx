@@ -78,7 +78,7 @@ export default function App() {
         {
           method: "PUT", // atau PUT sesuaikan dengan backend kamu
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ active: newStatus }),
+          // body: JSON.stringify({ active: newStatus }),
         },
       );
 
