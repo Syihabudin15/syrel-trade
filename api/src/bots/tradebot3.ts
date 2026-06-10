@@ -2,7 +2,7 @@ import { TIMEFRAME, TIMEFRAME_HIGHER, TOP_N } from "../libs/config.js";
 import { GetCandles, GetTopFutureVolume } from "../libs/exchange.js";
 import type { ITrade } from "../libs/interfaces.js";
 import { GetAllActiveTrades, ValidateBeforeTrade } from "../services/order.js";
-import { MeanReversionStrategy } from "../services/strategy.js";
+import { RangeBreakoutCompressionStrategy } from "../services/strategy.js";
 import { ClosePositions, OpenOrders } from "../services/trades.js";
 
 const id = process.argv[2]! as string;
@@ -19,7 +19,7 @@ const Main = async () => {
       const c2 = await GetCandles(symbol.symbol, TIMEFRAME_HIGHER, 200);
       if (c1.candles.length < 200) continue;
 
-      const signal = MeanReversionStrategy(symbol.symbol, c1, c2);
+      const signal = RangeBreakoutCompressionStrategy(symbol.symbol, c1, c2);
       if (!signal) continue;
 
       const longs = actives.filter(

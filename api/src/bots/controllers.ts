@@ -5,7 +5,7 @@ import prisma from "../libs/prisma.js";
 
 type BotProcessMap = Record<string, ChildProcess>;
 const runningBots: BotProcessMap = {};
-const botFiles = ["tradebot1", "tradebot2"];
+const botFiles = ["tradebot1", "tradebot2", "tradebot3"];
 
 export async function StartBot(bot: Bot) {
   if (runningBots[bot.id])

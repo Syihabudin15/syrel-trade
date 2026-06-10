@@ -125,34 +125,42 @@ export const ValidateActiveTrades = async () => {
     for (const trade of data) {
       const ticker = await GetCurrentPrice(trade.Pair.name);
       if (!ticker || !trade.sl_price || !trade.tp_price) continue;
+
       if (trade.side === "buy") {
-        if (ticker.high > trade.tp_price || ticker.low < trade.sl_price) {
+        const hitTP = ticker >= trade.tp_price;
+        const hitSL = ticker <= trade.sl_price;
+
+        if (hitTP || hitSL) {
+          const closePrice = hitTP ? trade.tp_price : trade.sl_price;
+          const closeReason = hitTP ? "TP" : "SL";
+
           updated.push({
             ...trade,
-            close:
-              ticker.high > trade.tp_price ? trade.tp_price : trade.sl_price,
+            close: closePrice,
             close_time: new Date(),
-            reason: ticker.high > trade.tp_price ? "TP" : "SL",
-            pnl: CalcPnl(
-              trade.side,
-              trade.open,
-              ticker.high > trade.tp_price ? trade.tp_price : trade.sl_price,
-              trade.amount,
-            ),
+            reason: closeReason,
+            pnl: CalcPnl(trade.side, trade.open, closePrice, trade.amount),
           });
         }
-      } else {
-        if (ticker.low < trade.tp_price || ticker.high > trade.sl_price) {
+      }
+
+      if (trade.side === "sell") {
+        const hitTP = ticker <= trade.tp_price;
+        const hitSL = ticker >= trade.sl_price;
+
+        if (hitTP || hitSL) {
+          const closePrice = hitTP ? trade.tp_price : trade.sl_price;
+          const closeReason = hitTP ? "TP" : "SL";
+
           updated.push({
             ...trade,
-            close:
-              ticker.low < trade.tp_price ? trade.tp_price : trade.sl_price,
+            close: closePrice,
             close_time: new Date(),
-            reason: ticker.low < trade.tp_price ? "TP" : "SL",
+            reason: closeReason,
             pnl: CalcPnl(
               trade.side as "buy" | "sell",
               trade.open,
-              ticker.low < trade.tp_price ? trade.tp_price : trade.sl_price,
+              closePrice,
               trade.amount,
             ),
           });

@@ -1,12 +1,7 @@
 import { TIMEFRAME, TIMEFRAME_HIGHER, TOP_N } from "../libs/config.js";
 import { GetCandles, GetTopFutureVolume } from "../libs/exchange.js";
 import type { ITrade } from "../libs/interfaces.js";
-import {
-  GetAllActiveTrades,
-  GetHourslyReport,
-  ValidateActiveTrades,
-  ValidateBeforeTrade,
-} from "../services/order.js";
+import { GetAllActiveTrades, ValidateBeforeTrade } from "../services/order.js";
 import { ThirdStarategy } from "../services/strategy.js";
 import { ClosePositions, OpenOrders } from "../services/trades.js";
 

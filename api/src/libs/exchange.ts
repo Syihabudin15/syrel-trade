@@ -111,11 +111,7 @@ export async function GetCurrentPrice(symbol: string) {
     await ensureMarketsLoaded();
     const ticker = await exchange.fetchTicker(symbol);
 
-    return {
-      price: ticker?.last ?? 0,
-      high: ticker.high ?? 0,
-      low: ticker.low ?? 0,
-    };
+    return ticker?.last;
   } catch (err) {
     console.log(
       `GetCurrentPrice(${symbol}) error:`,

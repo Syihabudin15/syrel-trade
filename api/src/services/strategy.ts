@@ -669,3 +669,272 @@ export const MeanReversionStrategy = (
     botId: null,
   };
 };
+
+export const RangeBreakoutCompressionStrategy = (
+  symbol: string,
+  c1: IGetCandles, // TF utama, contoh 5m
+  c2: IGetCandles, // HTF, contoh 15m atau 1h
+): ITrade | null => {
+  if (
+    c1.closes.length < 100 ||
+    c1.highs.length < 100 ||
+    c1.lows.length < 100 ||
+    c1.opens.length < 100 ||
+    c1.volumes.length < 100
+  ) {
+    return null;
+  }
+
+  if (
+    c2.closes.length < 50 ||
+    c2.highs.length < 50 ||
+    c2.lows.length < 50 ||
+    c2.opens.length < 50
+  ) {
+    return null;
+  }
+
+  // ===============================
+  // Indicator utama TF 5m
+  // ===============================
+  const atr14 = CalculateATR(c1.highs, c1.lows, c1.closes, 14);
+  const bb = CalculateBB(c1.closes, 20, 2);
+  const ema20 = CalculateEMA(c1.closes, 20);
+  const ema50 = CalculateEMA(c1.closes, 50);
+
+  const close = LastNumber(c1.closes);
+  const open = LastNumber(c1.opens);
+  const high = LastNumber(c1.highs);
+  const low = LastNumber(c1.lows);
+  const volume = LastNumber(c1.volumes);
+
+  const atr = LastNumber(atr14);
+  const upperBand = LastNumber(bb.upper);
+  const lowerBand = LastNumber(bb.lower);
+  const middleBand = LastNumber(bb.middle);
+  const lastEma20 = LastNumber(ema20);
+  const lastEma50 = LastNumber(ema50);
+
+  if (
+    !close ||
+    !open ||
+    !high ||
+    !low ||
+    !volume ||
+    !atr ||
+    !upperBand ||
+    !lowerBand ||
+    !middleBand ||
+    !lastEma20 ||
+    !lastEma50
+  ) {
+    return null;
+  }
+
+  if (atr <= 0 || middleBand <= 0) return null;
+
+  // ===============================
+  // Volume average
+  // ===============================
+  const volumePeriod = 20;
+  const recentVolumes = c1.volumes.slice(-volumePeriod);
+
+  if (recentVolumes.length < volumePeriod) return null;
+
+  const avgVolume =
+    recentVolumes.reduce((sum, v) => sum + v, 0) / recentVolumes.length;
+
+  if (!avgVolume || avgVolume <= 0) return null;
+
+  // ===============================
+  // Bollinger Band Width
+  // ===============================
+  const bbWidth = upperBand - lowerBand;
+  const bbWidthRatio = bbWidth / middleBand;
+
+  // Untuk TF 5m:
+  // < 0.025 = sangat ketat
+  // < 0.035 = normal
+  // < 0.05  = longgar
+  const isCompression = bbWidthRatio <= 0.035;
+
+  if (!isCompression) return null;
+
+  // ===============================
+  // Pastikan compression terjadi beberapa candle,
+  // bukan hanya 1 candle terakhir
+  // ===============================
+  const lookbackCompression = 5;
+
+  const upperSlice = bb.upper.slice(-lookbackCompression);
+  const lowerSlice = bb.lower.slice(-lookbackCompression);
+  const middleSlice = bb.middle.slice(-lookbackCompression);
+
+  if (
+    upperSlice.length < lookbackCompression ||
+    lowerSlice.length < lookbackCompression ||
+    middleSlice.length < lookbackCompression
+  ) {
+    return null;
+  }
+
+  const compressionCount = upperSlice.filter((upper, index) => {
+    const lower = lowerSlice[index];
+    const middle = middleSlice[index];
+
+    if (!upper || !lower || !middle || middle <= 0) return false;
+
+    const widthRatio = (upper - lower) / middle;
+
+    return widthRatio <= 0.04;
+  }).length;
+
+  // Minimal 4 dari 5 candle terakhir dalam kondisi compression
+  if (compressionCount < 4) return null;
+
+  // ===============================
+  // Candle strength
+  // ===============================
+  const totalRange = high - low;
+  if (totalRange <= 0) return null;
+
+  const body = Math.abs(close - open);
+  const bodyRatio = body / totalRange;
+
+  const bullishCandle = close > open;
+  const bearishCandle = close < open;
+
+  // Untuk breakout, body harus cukup besar.
+  const strongBody = bodyRatio >= 0.55;
+
+  // ===============================
+  // Breakout condition
+  // ===============================
+  const breakoutBuffer = atr * 0.1;
+
+  const breakoutLong =
+    close > upperBand + breakoutBuffer && bullishCandle && strongBody;
+
+  const breakoutShort =
+    close < lowerBand - breakoutBuffer && bearishCandle && strongBody;
+
+  if (!breakoutLong && !breakoutShort) return null;
+
+  // ===============================
+  // Volume confirmation
+  // ===============================
+  const volumeSpike = volume >= avgVolume * 1.4;
+
+  if (!volumeSpike) return null;
+
+  // ===============================
+  // HTF filter
+  // c2 sebaiknya 15m untuk entry 5m
+  // ===============================
+  const htfEma20 = CalculateEMA(c2.closes, 20);
+  const htfEma50 = CalculateEMA(c2.closes, 50);
+
+  const htfClose = LastNumber(c2.closes);
+  const lastHtfEma20 = LastNumber(htfEma20);
+  const lastHtfEma50 = LastNumber(htfEma50);
+
+  if (!htfClose || !lastHtfEma20 || !lastHtfEma50) return null;
+
+  const htfBullish = htfClose > lastHtfEma20 && lastHtfEma20 > lastHtfEma50;
+
+  const htfBearish = htfClose < lastHtfEma20 && lastHtfEma20 < lastHtfEma50;
+
+  // Jangan entry melawan HTF
+  const validLong = breakoutLong && htfBullish;
+  const validShort = breakoutShort && htfBearish;
+
+  const signal = validLong ? "LONG" : validShort ? "SHORT" : "WAIT";
+
+  if (signal === "WAIT") return null;
+
+  // ===============================
+  // Entry
+  // ===============================
+  const entryPrice = close;
+
+  let stopLossPrice = 0;
+  let takeProfitPrice = 0;
+
+  // ===============================
+  // SL & TP
+  // ===============================
+  if (signal === "LONG") {
+    // SL di bawah middle band / low candle breakout
+    stopLossPrice = Math.min(low, middleBand) - atr * 0.8;
+
+    const risk = entryPrice - stopLossPrice;
+    if (risk <= 0) return null;
+
+    // TP pakai RR
+    takeProfitPrice = entryPrice + risk * 1.5;
+  }
+
+  if (signal === "SHORT") {
+    // SL di atas middle band / high candle breakout
+    stopLossPrice = Math.max(high, middleBand) + atr * 0.8;
+
+    const risk = stopLossPrice - entryPrice;
+    if (risk <= 0) return null;
+
+    // TP pakai RR
+    takeProfitPrice = entryPrice - risk * 1.5;
+  }
+
+  const risk = Math.abs(entryPrice - stopLossPrice);
+  const reward = Math.abs(takeProfitPrice - entryPrice);
+
+  if (risk <= 0 || reward <= 0) return null;
+
+  const rr = reward / risk;
+
+  // Untuk breakout 5m, minimal 1.2 lebih sehat.
+  if (rr < 1.2) return null;
+
+  // ===============================
+  // Hindari SL terlalu jauh
+  // ===============================
+  const riskPercentFromEntry = risk / entryPrice;
+
+  // Untuk crypto 5m, 0.8% - 2.5% biasanya masih masuk akal.
+  // Sesuaikan dengan pair.
+  if (riskPercentFromEntry > 0.025) return null;
+
+  // ===============================
+  // Position sizing
+  // ===============================
+  const riskUSDT = 10 * (RISK_PERCENT / 100);
+  const amount = riskUSDT / risk;
+
+  if (!isFinite(amount) || amount <= 0) return null;
+
+  return {
+    id: "",
+    pairId: "",
+    Pair: {
+      name: symbol,
+      id: "",
+      status: true,
+      created_at: new Date(),
+      updated_at: new Date(),
+    },
+    side: signal === "LONG" ? "buy" : "sell",
+    open_time: new Date(),
+    open: Number(entryPrice.toFixed(4)),
+    amount: Number(amount.toFixed(6)),
+    sl_price: Number(stopLossPrice.toFixed(4)),
+    tp_price: Number(takeProfitPrice.toFixed(4)),
+    pnl: 0,
+    reason: `Range Breakout Compression ${signal} | BBWidth=${bbWidthRatio.toFixed(
+      4,
+    )} | Volume=${(volume / avgVolume).toFixed(2)}x | RR=${rr.toFixed(2)}`,
+    lev: MAX_LEV,
+    close: null,
+    close_time: null,
+    botId: null,
+  };
+};
