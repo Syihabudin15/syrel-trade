@@ -298,7 +298,7 @@ export default function App() {
       {/* HEADER */}
       <header className="mb-8 flex items-center justify-between  p-6 rounded-2xl shadow-sm border border-slate-100">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+          <h1 className="text-2xl font-bold  flex items-center gap-2">
             <Activity className="text-indigo-600 animate-pulse" size={28} />
             Algorithmic Trading Dashboard
           </h1>

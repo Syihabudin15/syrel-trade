@@ -117,9 +117,9 @@ model Trade {
 model PumpScanner {
   id      String  @id @default(uuid())
   reason  String?
-  open    Int
-  sl      Int
-  tp      Int
+  open    Float
+  sl      Float
+  tp      Float
   summary String  @db.Text
   active  Boolean @default(true)
 
