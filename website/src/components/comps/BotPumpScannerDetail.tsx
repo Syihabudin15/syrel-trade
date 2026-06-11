@@ -103,9 +103,7 @@ export default function BotPumpScanner({ botId, onBack }: BotPumpScannerProps) {
       title: "Asset Pair",
       dataIndex: ["Pair", "name"],
       key: "pair_name",
-      render: (text) => (
-        <span className="font-bold text-slate-800">{text || "—"}</span>
-      ),
+      render: (text) => <span className="font-bold ">{text || "—"}</span>,
     },
     {
       title: "Setup / Reason",
@@ -122,9 +120,7 @@ export default function BotPumpScanner({ botId, onBack }: BotPumpScannerProps) {
       dataIndex: "open",
       key: "open",
       render: (val) => (
-        <span className="font-mono font-medium text-slate-600">
-          ${val.toLocaleString()}
-        </span>
+        <span className="font-mono font-medium ">${val.toLocaleString()}</span>
       ),
     },
     {

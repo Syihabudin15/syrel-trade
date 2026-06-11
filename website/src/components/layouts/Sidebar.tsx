@@ -36,7 +36,7 @@ export default function Sidebar({
           icon: <CloudServerOutlined />,
           label: "Bot Saya",
         },
-        { key: "buy", icon: <ShoppingCartOutlined />, label: "Beli Produk" },
+        // { key: "buy", icon: <ShoppingCartOutlined />, label: "Beli Produk" },
       ],
     },
     {
@@ -44,11 +44,11 @@ export default function Sidebar({
       label: collapsed ? "" : "KEUANGAN",
       type: "group" as const,
       children: [
-        {
-          key: "subscription",
-          icon: <CreditCardOutlined />,
-          label: "Langganan",
-        },
+        // {
+        //   key: "subscription",
+        //   icon: <CreditCardOutlined />,
+        //   label: "Langganan",
+        // },
         {
           key: "trade",
           icon: <HistoryOutlined />,

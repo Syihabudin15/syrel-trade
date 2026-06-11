@@ -12,8 +12,8 @@ const Main = async () => {
 
   for (const symbol of topVolumeData) {
     try {
-      const c1 = await GetCandles(symbol.symbol, "1h", 200);
-      const c2 = await GetCandles(symbol.symbol, "4h", 200);
+      const c1 = await GetCandles(symbol.symbol, "15m", 200);
+      const c2 = await GetCandles(symbol.symbol, "1h", 200);
       if (c1.candles.length < 200) continue;
 
       const signal = MarketScanner(symbol.symbol, c1, c2);
