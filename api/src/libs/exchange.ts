@@ -37,6 +37,7 @@ export async function GetTopFutureVolume(limit = 30) {
           market.quote === "USDT"
         );
       })
+      .filter((t) => Number(t.close) > 0.0001)
       .map((ticker) => ({
         symbol: ticker.symbol,
         price: ticker.last,
