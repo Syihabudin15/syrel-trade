@@ -685,16 +685,16 @@ export const RangeBreakoutCompressionStrategy = (
 
 // const LIMIT = 150;
 
-const MIN_VOLUME_SPIKE = 2.5;
-const MIN_SCORE_ALERT = 10;
+const MIN_VOLUME_SPIKE = 1.5;
+const MIN_SCORE_ALERT = 7;
 
-const ATR_SL_MULTIPLIER = 1.5;
-const ATR_TP_MULTIPLIER = 3;
+const ATR_SL_MULTIPLIER = 1.3;
+const ATR_TP_MULTIPLIER = 2.5;
 
 const RECENT_HIGH_PERIOD = 20;
 const AVG_VOLUME_PERIOD = 20;
 
-const MAX_RSI = 72;
+const MAX_RSI = 82;
 // const MIN_RSI = 50;
 
 // const MAX_DISTANCE_FROM_EMA20_ATR = 1.5;
