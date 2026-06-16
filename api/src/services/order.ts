@@ -175,9 +175,12 @@ export const ValidateActiveTrades = async () => {
             prisma.trade.updateMany({ where: { id: d.id }, data: d }),
           ),
       );
+    }
+    const closeds = updated.filter((a) => a.close_time);
+    if (closeds.length !== 0) {
       SendTelegramMessage(`
 📋 <b>Closed Trade</b>
-${updated.map((d) => `${d.reason} (${d.side}) ${d.Pair.name}: ${d.pnl.toFixed(2)}`).join("\n")}
+${closeds.map((d) => `${d.reason} (${d.side}) ${d.Pair.name}: ${d.pnl.toFixed(2)}`).join("\n")}
         `);
     }
   } catch (err) {
