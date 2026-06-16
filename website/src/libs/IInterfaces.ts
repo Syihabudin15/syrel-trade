@@ -38,6 +38,7 @@ export interface ITrade {
   sl_price: number | null;
   pnl: number;
   reason: string | null;
+  summary: string | null;
 
   open_time: Date;
   close_time: Date | null;
@@ -71,4 +72,10 @@ export interface IBotLog {
   date: Date;
   Bot: IBot;
   botId: string;
+}
+
+export interface IPageProps<T> {
+  [key: string]: any;
+  data: T[];
+  total: number;
 }

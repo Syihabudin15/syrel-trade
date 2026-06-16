@@ -88,10 +88,11 @@ export function CalcPnl(
 
   return Number(((open - close) * amount).toFixed(4));
 }
+
 export const ValidateBeforeTrade = async (symbol?: string) => {
   const where: Prisma.TradeWhereInput = {
     open_time: {
-      gte: moment().subtract(4, "hour").toDate(),
+      gte: moment().subtract(4, "hours").toDate(),
     },
     ...(symbol && { Pair: { name: symbol } }),
   };

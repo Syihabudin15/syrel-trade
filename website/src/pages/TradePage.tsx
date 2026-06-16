@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Table,
   Tag,
@@ -9,28 +9,34 @@ import {
   Input,
   Select,
   Tooltip,
-  Space,
   Badge,
   message,
 } from "antd";
 import {
   Search,
   Filter,
-  ArrowUpDown,
   TrendingUp,
   TrendingDown,
   Percent,
   Zap,
   Clock,
-  HelpCircle,
 } from "lucide-react";
 import type { ColumnsType } from "antd/es/table";
 
 // Import interfaces dari file eksternal kamu
-import { ITrade, EBotType } from "../libs/IInterfaces";
+import { ITrade, EBotType, IPageProps } from "../libs/IInterfaces";
 
 export default function TradeHistory() {
-  const [trades, setTrades] = useState<ITrade[]>([]);
+  const [data, setData] = useState<IPageProps<ITrade>>({
+    data: [],
+    total: 0,
+    page: 1,
+    winrate: 0,
+    actives: 0,
+    closeds: 0,
+    limit: 20,
+    search: "",
+  });
   const [loading, setLoading] = useState<boolean>(true);
 
   // State untuk Filter & Pencarian
@@ -39,63 +45,41 @@ export default function TradeHistory() {
   const [botTypeFilter, setBotTypeFilter] = useState<string>("ALL");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
 
-  // Fetch data dari API /api/trade
+  const getData = async () => {
+    setLoading(true);
+    const params = {
+      limit: data.limit,
+      page: data.page,
+      search: data.search,
+    };
+    await fetch("/api/trade?" + new URLSearchParams(params).toString())
+      .then((res) => res.json())
+      .then((res) =>
+        setData((prev) => ({
+          ...prev,
+          data: res.data,
+          total: res.total,
+          winrate: res.winrate,
+          actives: res.actives.length,
+          closeds: res.closeds.length,
+        })),
+      );
+    setLoading(false);
+  };
+
   useEffect(() => {
-    async function fetchTrades() {
-      try {
-        setLoading(true);
-        const res = await fetch("/api/trade");
-        const { data } = await res.json();
-        setTrades(data);
-      } catch (error) {
-        message.error("Gagal memuat history trade.");
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchTrades();
+    setInterval(() => {
+      getData();
+    }, 1000 * 60);
   }, []);
 
-  // ==========================================
-  // KALKULASI METRIK STATISTIK (DARI DATA API)
-  // ==========================================
-  const totalTrades = trades.length;
-  const closedTrades = trades.filter((t) => t.close_time !== null);
-  const openTradesCount = totalTrades - closedTrades.length;
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      getData();
+    }, 200);
+    return () => clearTimeout(timeout);
+  }, [data.page, data.limit, data.search]);
 
-  const totalPnL = trades.reduce((sum, t) => sum + t.pnl, 0);
-
-  const winTrades = closedTrades.filter((t) => t.pnl > 0).length;
-  const winRate =
-    closedTrades.length > 0 ? (winTrades / closedTrades.length) * 100 : 0;
-
-  const avgLeverage =
-    totalTrades > 0
-      ? trades.reduce((sum, t) => sum + t.lev, 0) / totalTrades
-      : 0;
-
-  // ==========================================
-  // LOGIKA FILTERING DATA
-  // ==========================================
-  const filteredTrades = trades.filter((trade) => {
-    const matchPair = trade.Pair?.name
-      .toLowerCase()
-      .includes(searchPair.toLowerCase());
-    const matchSide = sideFilter === "ALL" || trade.side === sideFilter;
-    const matchBotType =
-      botTypeFilter === "ALL" || trade.Bot?.type === botTypeFilter;
-
-    let matchStatus = true;
-    if (statusFilter === "OPEN") matchStatus = trade.close_time === null;
-    if (statusFilter === "CLOSED") matchStatus = trade.close_time !== null;
-
-    return matchPair && matchSide && matchBotType && matchStatus;
-  });
-
-  // ==========================================
-  // CONFIGURASI KOLOM TABEL ANTD
-  // ==========================================
   const columns: ColumnsType<ITrade> = [
     {
       title: "Waktu Eksekusi",
@@ -246,11 +230,21 @@ export default function TradeHistory() {
       title: "Reason",
       dataIndex: "reason",
       key: "reason",
-      width: 100,
       render: (reason: string | null) => (
-        <Tooltip title={reason} placement="topLeft">
+        <div className="text-xs text-slate-400 truncate max-w-50 italic font-serif">
+          {reason || <span className="text-slate-300">-</span>}
+        </div>
+      ),
+    },
+    {
+      title: "Summary",
+      dataIndex: "summary",
+      key: "summary",
+      width: 150,
+      render: (summary: string | null) => (
+        <Tooltip title={summary} placement="topLeft">
           <div className="text-xs text-slate-400 truncate max-w-50 italic font-serif">
-            {reason || <span className="text-slate-300">-</span>}
+            {summary || <span className="text-slate-300">-</span>}
           </div>
         </Tooltip>
       ),
@@ -284,14 +278,14 @@ export default function TradeHistory() {
                   Net Profit / Loss
                 </span>
               }
-              value={totalPnL}
+              value={data.pnl}
               precision={2}
               valueStyle={{
-                color: totalPnL >= 0 ? "#10b981" : "#f43f5e",
+                color: data.pnl >= 0 ? "#10b981" : "#f43f5e",
                 fontWeight: "bold",
               }}
               prefix={
-                totalPnL >= 0 ? (
+                data.pnl >= 0 ? (
                   <TrendingUp size={20} className="mr-1.5" />
                 ) : (
                   <TrendingDown size={20} className="mr-1.5" />
@@ -317,7 +311,7 @@ export default function TradeHistory() {
                   Bot Strategy Win Rate
                 </span>
               }
-              value={winRate}
+              value={data.winrate}
               precision={1}
               valueStyle={{ color: "#4f46e5", fontWeight: "bold" }}
               prefix={<Percent size={18} className="text-indigo-600 mr-1.5" />}
@@ -341,9 +335,9 @@ export default function TradeHistory() {
                   Active Floating Positions
                 </span>
               }
-              value={openTradesCount}
+              value={data.actives}
               valueStyle={{
-                color: openTradesCount > 0 ? "#2563eb" : "#64748b",
+                color: data.actives > 0 ? "#2563eb" : "#64748b",
                 fontWeight: "bold",
               }}
               suffix={
@@ -366,7 +360,7 @@ export default function TradeHistory() {
                   Average Leverage Multiplier
                 </span>
               }
-              value={avgLeverage}
+              value={5}
               precision={1}
               valueStyle={{ color: "#d97706", fontWeight: "bold" }}
               suffix={
@@ -388,10 +382,12 @@ export default function TradeHistory() {
             className="w-full sm:w-56 rounded-lg"
             allowClear
             value={searchPair}
-            onChange={(e) => setSearchPair(e.target.value)}
+            onChange={(e) =>
+              setData((prev) => ({ ...prev, search: e.target.value }))
+            }
           />
 
-          <Select
+          {/* <Select
             defaultValue="ALL"
             className="w-full sm:w-36"
             onChange={(val) => setSideFilter(val)}
@@ -412,9 +408,9 @@ export default function TradeHistory() {
               { value: EBotType.TRADING, label: "Direct Trading" },
               { value: EBotType.SCANNER, label: "Market Scanner" },
             ]}
-          />
+          /> */}
 
-          <Select
+          {/* <Select
             defaultValue="ALL"
             className="w-full sm:w-40"
             onChange={(val) => setStatusFilter(val)}
@@ -423,19 +419,18 @@ export default function TradeHistory() {
               { value: "OPEN", label: "Posisi Aktif (Live)" },
               { value: "CLOSED", label: "Selesai (Closed)" },
             ]}
-          />
+          /> */}
         </div>
 
         <div className="text-xs text-slate-400 flex items-center gap-1">
-          <Filter size={12} /> Menampilkan <b>{filteredTrades.length}</b>{" "}
-          rekaman data
+          <Filter size={12} /> Menampilkan <b>{data.total}</b> rekaman data
         </div>
       </div>
 
       {/* MAIN DATA TABLE */}
       <div className=" rounded-xl shadow-sm border border-slate-100 overflow-hidden">
         <Table
-          dataSource={filteredTrades}
+          dataSource={data.data}
           columns={columns}
           rowKey="id"
           loading={loading}

@@ -8,25 +8,20 @@ import {
   Statistic,
   Button,
   Tabs,
-  Badge,
   Tooltip,
-  message,
 } from "antd";
 import {
-  Bot,
-  Clock,
   Activity,
   TrendingUp,
   TrendingDown,
   Terminal,
   RefreshCw,
-  Zap,
   ArrowLeft,
 } from "lucide-react";
 import type { ColumnsType } from "antd/es/table";
 
 // Import interfaces dari file eksternal kamu
-import { IBot, ITrade, IBotLog } from "../../libs/IInterfaces";
+import { IBot, ITrade, IBotLog, IPageProps } from "../../libs/IInterfaces";
 
 interface BotDetailProps {
   botId: string;
@@ -34,70 +29,74 @@ interface BotDetailProps {
 }
 
 export default function BotDetail({ botId, onBack }: BotDetailProps) {
+  const [tradedata, setTradedata] = useState<IPageProps<ITrade>>({
+    page: 1,
+    limit: 10,
+    activetrades: 0,
+    closedtrades: 0,
+    winrate: 0,
+    pnl: 0,
+    data: [],
+    total: 0,
+  });
+  const [logsdata, setLogsdata] = useState<IPageProps<IBotLog>>({
+    page: 1,
+    limit: 10,
+    data: [],
+    total: 0,
+  });
   const [botData, setBotData] = useState<IBot | null>(null);
-  const [trades, setTrades] = useState<ITrade[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [refreshing, setRefreshing] = useState<boolean>(false);
-  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
-  // Fungsi enkapsulasi fetch data gabungan
-  const fetchData = useCallback(
-    async (isSilent = false) => {
-      if (!isSilent) setLoading(true);
-      else setRefreshing(true);
+  const getData = async () => {
+    setLoading(true);
+    await Promise.all([
+      fetch("/api/bot/" + botId, { method: "PATCH" })
+        .then((res) => res.json())
+        .then((res) => setBotData(res.data)),
+      fetch("/api/botlogs?botId=" + botId)
+        .then((res) => res.json())
+        .then((res) =>
+          setLogsdata((prev) => ({
+            ...prev,
+            data: res.data,
+            total: res.total,
+          })),
+        ),
+      fetch("/api/trade?botId=" + botId)
+        .then((res) => res.json())
+        .then((res) => {
+          setTradedata((prev) => ({
+            ...prev,
+            data: res.data,
+            total: res.total,
+            pnl: res.pnl,
+            activetrades: res.actives.length,
+            closedtrades: res.closeds.length,
+            winrate: res.winrate,
+          }));
+        }),
+    ]);
+    setLoading(false);
+  };
 
-      try {
-        // 1. Ambil detail data bot (yang otomatis include/embed BotLogs di backend)
-        const resBot = await fetch(`/api/bot/${botId}`, { method: "PATCH" });
-        if (!resBot.ok) throw new Error("Gagal mengambil data bot");
-        const { data } = await resBot.json();
-        setBotData(data);
-        setTrades(data.Trades);
-
-        setLastUpdated(new Date());
-      } catch (error) {
-        console.error(error);
-        message.error("Gagal melakukan sinkronisasi data dari API Engine.");
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
-      }
-    },
-    [botId],
-  );
-
-  // Efek untuk fetch data pertama kali & set interval refresh setiap 1 menit
   useEffect(() => {
-    fetchData();
+    setInterval(() => {
+      getData();
+    }, 1000 * 60);
+  }, []);
 
-    // Setup interval auto-refresh 1 menit (60000 ms)
-    const intervalId = setInterval(() => {
-      fetchData(true); // IsSilent = true agar tidak memicu spinner utama yang mengganggu UX
-    }, 60000);
+  useEffect(() => {
+    (async () => {
+      await getData();
+    })();
+  }, [tradedata.page, tradedata.limit, logsdata.page, logsdata.limit]);
 
-    // Bersihkan interval saat komponen dilepas (unmounted)
-    return () => clearInterval(intervalId);
-  }, [fetchData]);
-
-  // ==========================================
-  // KALKULASI RINGKASAN METRIK PERFORMA BOT
-  // ==========================================
-  const totalPnL = trades.reduce((sum, t) => sum + t.pnl, 0);
-  const activePositions = trades.filter((t) => t.close_time === null).length;
-  const closedTrades = trades.filter((t) => t.close_time !== null);
-  const winRate =
-    closedTrades.length > 0
-      ? (closedTrades.filter((t) => t.pnl > 0).length / closedTrades.length) *
-        100
-      : 0;
-
-  // ==========================================
-  // SKEMA CONFIG KOLOM (TRADES & LOGS)
-  // ==========================================
   const tradeColumns: ColumnsType<ITrade> = [
     {
       title: "Waktu",
       key: "time",
+      fixed: window && window.innerWidth > 600 ? "left" : false,
       render: (_, record) => (
         <div className="text-xs text-slate-500">
           <div>
@@ -121,6 +120,7 @@ export default function BotDetail({ botId, onBack }: BotDetailProps) {
       title: "Asset Pair",
       dataIndex: ["Pair", "name"],
       key: "pair_name",
+      fixed: window && window.innerWidth > 600 ? "left" : false,
       render: (text) => <span className="font-bold ">{text}</span>,
     },
     {
@@ -200,9 +200,19 @@ export default function BotDetail({ botId, onBack }: BotDetailProps) {
       dataIndex: "reason",
       key: "reason",
       render: (reason) => (
-        <Tooltip title={reason}>
+        <div className="text-xs text-slate-400 truncate max-w-37.5">
+          {reason || "—"}
+        </div>
+      ),
+    },
+    {
+      title: "Summary",
+      dataIndex: "summary",
+      key: "summary",
+      render: (summary) => (
+        <Tooltip title={summary}>
           <div className="text-xs text-slate-400 truncate max-w-37.5">
-            {reason || "—"}
+            {summary || "—"}
           </div>
         </Tooltip>
       ),
@@ -277,29 +287,6 @@ export default function BotDetail({ botId, onBack }: BotDetailProps) {
             </p>
           </div>
         </div>
-
-        {/* METODE UTOR REFRESH INFO */}
-        <div className="flex items-center gap-3">
-          <div className="text-right text-[11px] text-slate-400">
-            <span className="flex items-center gap-1">
-              <Clock size={12} /> Auto-refresh active (1m)
-            </span>
-            <div>Terakhir diperbarui: {lastUpdated.toLocaleTimeString()}</div>
-          </div>
-          <Button
-            icon={
-              <RefreshCw
-                size={14}
-                className={refreshing ? "animate-spin text-indigo-600" : ""}
-              />
-            }
-            onClick={() => fetchData(true)}
-            disabled={refreshing}
-            className="rounded-lg flex items-center gap-1 font-medium text-xs text-slate-600"
-          >
-            Refresh
-          </Button>
-        </div>
       </div>
 
       {/* METRIC ROW WIDGETS */}
@@ -315,14 +302,14 @@ export default function BotDetail({ botId, onBack }: BotDetailProps) {
                   Total Realized PnL
                 </span>
               }
-              value={totalPnL}
+              value={tradedata.pnl}
               precision={2}
               valueStyle={{
-                color: totalPnL >= 0 ? "#10b981" : "#f43f5e",
+                color: tradedata.pnl >= 0 ? "#10b981" : "#f43f5e",
                 fontWeight: "bold",
               }}
               prefix={
-                totalPnL >= 0 ? (
+                tradedata.pnl >= 0 ? (
                   <TrendingUp size={18} className="mr-1" />
                 ) : (
                   <TrendingDown size={18} className="mr-1" />
@@ -347,7 +334,7 @@ export default function BotDetail({ botId, onBack }: BotDetailProps) {
                   Instance Win Rate
                 </span>
               }
-              value={winRate}
+              value={tradedata.winrate}
               precision={1}
               valueStyle={{ color: "#4f46e5", fontWeight: "bold" }}
               suffix="%"
@@ -365,9 +352,9 @@ export default function BotDetail({ botId, onBack }: BotDetailProps) {
                   Open Floating Positions
                 </span>
               }
-              value={activePositions}
+              value={tradedata.activetrades}
               valueStyle={{
-                color: activePositions > 0 ? "#2563eb" : "#64748b",
+                color: tradedata.activetrades > 0 ? "#2563eb" : "#64748b",
                 fontWeight: "bold",
               }}
               suffix={
@@ -390,16 +377,26 @@ export default function BotDetail({ botId, onBack }: BotDetailProps) {
               key: "1",
               label: (
                 <span className="flex items-center gap-1.5 font-medium px-1">
-                  <Activity size={15} /> Execution Trades ({trades.length})
+                  <Activity size={15} /> Execution Trades ({tradedata.closeds})
                 </span>
               ),
               children: (
                 <div className="pt-2">
                   <Table
-                    dataSource={trades}
+                    dataSource={tradedata.data}
                     columns={tradeColumns}
                     rowKey="id"
-                    pagination={{ pageSize: 5 }}
+                    pagination={{
+                      pageSize: tradedata.limit,
+                      showSizeChanger: true,
+                      onChange(page, pageSize) {
+                        setTradedata((prev) => ({
+                          ...prev,
+                          page,
+                          limit: pageSize,
+                        }));
+                      },
+                    }}
                     scroll={{ x: true }}
                     size="small"
                   />
@@ -420,7 +417,17 @@ export default function BotDetail({ botId, onBack }: BotDetailProps) {
                     dataSource={botData.BotLogs || []}
                     columns={logColumns}
                     rowKey="id"
-                    pagination={{ pageSize: 5 }}
+                    pagination={{
+                      pageSize: logsdata.limit,
+                      showSizeChanger: true,
+                      onChange(page, pageSize) {
+                        setLogsdata((prev) => ({
+                          ...prev,
+                          page,
+                          limit: pageSize,
+                        }));
+                      },
+                    }}
                     size="small"
                   />
                 </div>

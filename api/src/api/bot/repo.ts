@@ -9,7 +9,6 @@ export const GET = async (req: Request, res: Response) => {
   page = Number(page);
   limit = Number(limit);
   const skip = (page - 1) * limit;
-
   try {
     const where: Prisma.BotWhereInput = {
       status: true,

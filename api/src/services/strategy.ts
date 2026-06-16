@@ -379,8 +379,8 @@ export const ThirdStarategy = (
 
   // 7. Filter Volatilitas & Volume Spike
   const atrPercent = (atr / close) * 100;
-  const validVolatility = atrPercent >= 0.1 && atrPercent <= 0.8;
-  const volumeSpike = isVolumeSpike(c1.volumes, 20, 1.8);
+  const validVolatility = atrPercent >= 0.1 && atrPercent <= 1.2;
+  const volumeSpike = isVolumeSpike(c1.volumes, 20, 1.5);
   if (!validVolatility || !volumeSpike) return null;
 
   // 8. Struktur Market & Divergence
@@ -401,11 +401,11 @@ export const ThirdStarategy = (
   const pullbackLong =
     close > emaMid &&
     close >= emaFast &&
-    Math.abs(close - emaFast) <= atr * 1.2;
+    Math.abs(close - emaFast) <= atr * 1.4;
   const pullbackShort =
     close < emaMid &&
     close <= emaFast &&
-    Math.abs(close - emaFast) <= atr * 1.2;
+    Math.abs(close - emaFast) <= atr * 1.4;
 
   // ==========================================
   // 10. CONFLUENCE MATRIX SCORING (DIOPTIMALKAN)
@@ -459,14 +459,14 @@ export const ThirdStarategy = (
   // ==========================================
   // Menggunakan sistem murni gabungan passing score & syarat wajib tren makro
   const validLong =
-    longScore >= 7 &&
+    longScore >= 6 &&
     longScore > shortScore &&
     htfTrendLong && // Tren makro wajib searah
     longTriggerCount >= 1 && // Minimal ada 1 trigger aktif pengeksekusi
     !bearishDivergence;
 
   const validShort =
-    shortScore >= 7 &&
+    shortScore >= 6 &&
     shortScore > longScore &&
     htfTrendShort && // Tren makro wajib searah
     shortTriggerCount >= 1 && // Minimal ada 1 trigger aktif pengeksekusi
@@ -497,6 +497,7 @@ export const ThirdStarategy = (
     tp_price: pricing.tp,
     pnl: 0,
     reason: null,
+    summary: `Longscore ${longScore} / Shortscore ${shortScore}`,
     lev: pricing.lev,
     close: null,
     close_time: null,
@@ -673,13 +674,14 @@ export const MeanReversionStrategy = (
       updated_at: new Date(),
     },
     side: signal === "LONG" ? "buy" : "sell",
+    summary: `Mean Reversion ${signal} | RSI=${rsi.toFixed(2)} | RR=${rr.toFixed(2)}`,
     open_time: new Date(),
     open: Number(entryPrice.toFixed(4)),
     amount: Number(amount.toFixed(6)),
     sl_price: Number(stopLossPrice.toFixed(4)),
     tp_price: Number(takeProfitPrice.toFixed(4)),
     pnl: 0,
-    reason: `Mean Reversion ${signal} | RSI=${rsi.toFixed(2)} | RR=${rr.toFixed(2)}`,
+    reason: null,
     lev: MAX_LEV,
     close: null,
     close_time: null,
@@ -867,24 +869,36 @@ export const RangeBreakoutCompressionStrategy = (
   let takeProfitPrice = 0;
 
   if (signal === "LONG") {
-    stopLossPrice = Math.min(prevHighRange, low) - prevAtr * 0.3;
+    // PERBAIKAN: SL diletakkan di bawah garis tengah BB atau di bawah lower range untuk keamanan dari retest
+    const safeSupport = Math.min(prevMiddleBand, prevLowRange);
+    stopLossPrice = safeSupport - prevAtr * 0.2;
+
     const risk = entryPrice - stopLossPrice;
     if (risk <= 0) return null;
-    takeProfitPrice = entryPrice + risk * 1.5;
+
+    // Menaikkan Reward Ratio ke 1:2 karena strategi breakout membutuhkan RR tinggi untuk menutup akurasi yang rendah
+    takeProfitPrice = entryPrice + risk * 2.0;
   } else {
-    stopLossPrice = Math.max(prevLowRange, high) + prevAtr * 0.3;
+    // PERBAIKAN: SL diletakkan di atas garis tengah BB atau di atas upper range
+    const safeResistance = Math.max(prevMiddleBand, prevHighRange);
+    stopLossPrice = safeResistance + prevAtr * 0.2;
+
     const risk = stopLossPrice - entryPrice;
     if (risk <= 0) return null;
-    takeProfitPrice = entryPrice - risk * 1.5;
+
+    takeProfitPrice = entryPrice - risk * 2.0;
   }
 
   const riskPrice = Math.abs(entryPrice - stopLossPrice);
   const rr = Math.abs(takeProfitPrice - entryPrice) / riskPrice;
-  if (rr < 1.2) return null;
+
+  // Mengunci minimal Risk-to-Reward Ratio di 1.5 agar secara matematis tetap profitable dalam jangka panjang
+  if (rr < 1.5) return null;
 
   const riskPercentFromEntry = riskPrice / entryPrice;
-  if (riskPercentFromEntry > 0.025 || riskPercentFromEntry < 0.0025)
-    return null;
+
+  // Melonggarkan sedikit batas maksimal risk persentase karena SL kita sekarang lebih lebar dan aman
+  if (riskPercentFromEntry > 0.04 || riskPercentFromEntry < 0.0025) return null;
 
   // 12. Dynamic Position Sizing (DIPERBAIKI: Menggunakan dynamic balance)
   const riskUSDT = 10 * (RISK_PERCENT / 100);
@@ -909,7 +923,8 @@ export const RangeBreakoutCompressionStrategy = (
     sl_price: Number(stopLossPrice.toFixed(6)),
     tp_price: Number(takeProfitPrice.toFixed(6)),
     pnl: 0,
-    reason: `Range Breakout Compression ${signal} | BBWidth=${bbWidthRatio.toFixed(4)} | VolRatio=${(volume / avgVolume).toFixed(2)}x | Risk=${(riskPercentFromEntry * 100).toFixed(2)}%`,
+    reason: null,
+    summary: `Range Breakout Compression ${signal} | BBWidth=${bbWidthRatio.toFixed(4)} | VolRatio=${(volume / avgVolume).toFixed(2)}x | Risk=${(riskPercentFromEntry * 100).toFixed(2)}%`,
     lev: MAX_LEV,
     close: null,
     close_time: null,
@@ -929,9 +944,9 @@ const RECENT_HIGH_PERIOD = 20;
 const AVG_VOLUME_PERIOD = 20;
 
 const MAX_RSI = 72;
-const MIN_RSI = 50;
+// const MIN_RSI = 50;
 
-const MAX_DISTANCE_FROM_EMA20_ATR = 1.5;
+// const MAX_DISTANCE_FROM_EMA20_ATR = 1.5;
 const MAX_RISK_PERCENT = 3.5;
 
 export const MarketScanner = (
@@ -1041,12 +1056,9 @@ export const MarketScanner = (
   // ===============================
   // Volume spike
   // ===============================
-  const avgVolume20 = average(volumes.slice(-(AVG_VOLUME_PERIOD + 1), -1));
+  const avgVolume20 = average(volumes.slice(-(AVG_VOLUME_PERIOD + 2), -2));
   const volumeSpike = avgVolume20 > 0 ? last.volume / avgVolume20 : 0;
 
-  // ===============================
-  // Struktur candle
-  // ===============================
   const candleRange = last.high - last.low;
   const candleBody = Math.abs(last.close - last.open);
 
@@ -1058,21 +1070,15 @@ export const MarketScanner = (
   const isStrongBullishCandle =
     isBullishCandle && bodyRatio >= 0.35 && closePosition >= 0.6;
 
-  // ===============================
-  // Breakout recent high
-  // ===============================
-  const recentHigh = Math.max(...highs.slice(-(RECENT_HIGH_PERIOD + 1), -1));
+  // Mencari high tertinggi dari range sebelum candle breakout terbentuk
+  const recentHigh = Math.max(...highs.slice(-(RECENT_HIGH_PERIOD + 2), -2));
   const isBreakRecentHigh = price > recentHigh;
 
-  // ===============================
-  // Anti entry telat
-  // ===============================
+  // Anti entry telat (Dilonggarkan menjadi 2.2 ATR karena momentum breakout membutuhkan ruang lebih lebar)
   const distanceFromEma20Atr = (price - nowEma20) / nowAtr;
-  const isTooFarFromEma20 = distanceFromEma20Atr > MAX_DISTANCE_FROM_EMA20_ATR;
+  const isTooFarFromEma20 = distanceFromEma20Atr > 2.2;
 
-  // ===============================
   // Trend HTF
-  // ===============================
   const isHtfBullish =
     nowHtfEma20 > nowHtfEma50 &&
     nowHtfEma20 > prevHtfEma20 &&
@@ -1085,22 +1091,23 @@ export const MarketScanner = (
   // Hindari candle merah / volume dump
   if (!isStrongBullishCandle) return null;
 
-  // Hindari entry saat harga sudah terlalu jauh dari EMA20
+  // 2. Hindari entry jika benar-benar sudah overextended (terlalu jauh dari rata-rata)
   if (isTooFarFromEma20) return null;
 
-  // Hindari RSI terlalu panas
-  if (nowRsi > MAX_RSI) return null;
+  // 3. PERBAIKAN: Untuk strategi PUMP SCANNER, batasan RSI maksimal dinaikkan ke 82.
+  // Sinyal kuat justru lahir saat RSI melompat ekstrem ke area overbought.
+  if (nowRsi > 82) return null;
 
-  // RSI wajib sudah bullish
-  if (nowRsi < MIN_RSI) return null;
+  // 4. Batasan bawah RSI diturunkan ke 48 agar koin yang baru berbalik arah (reversal) bisa ikut terscan
+  if (nowRsi < 48) return null;
 
-  // HTF wajib mendukung
+  // 5. HTF wajib mendukung tren besarnya
   if (!isHtfBullish) return null;
 
-  // Breakout wajib valid
+  // 6. Validitas konfirmasi breakout harga atas
   if (!isBreakRecentHigh) return null;
 
-  // Volume wajib spike
+  // 7. Minimal volume masuk pasar
   if (volumeSpike < MIN_VOLUME_SPIKE) return null;
 
   // ===============================
@@ -1192,9 +1199,9 @@ export const MarketScanner = (
   return {
     id: "",
     reason: null,
-    open: price,
-    sl,
-    tp,
+    open: Number(price.toFixed(6)),
+    sl: Number(sl.toFixed(6)),
+    tp: Number(tp.toFixed(6)),
     summary: JSON.stringify({
       score,
       reasons,

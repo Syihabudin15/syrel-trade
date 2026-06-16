@@ -43,15 +43,14 @@ model Role {
 }
 
 model User {
-  id         String  @id @default(uuid())
-  fullname   String
-  nik        String?
-  nip        String?
-  phone      String?
-  email      String?
-  username   String  @unique
-  password   String
-  follow_bot Boolean @default(false)
+  id       String  @id @default(uuid())
+  fullname String
+  nik      String?
+  nip      String?
+  phone    String?
+  email    String?
+  username String  @unique
+  password String
 
   status        Boolean         @default(true)
   created_at    DateTime        @default(now())
@@ -60,6 +59,26 @@ model User {
   roleId        String
   LogActivities LogActivities[]
   Wallets       Wallet[]
+}
+
+model UserSubscription {
+  id       String   @id @default(uuid())
+  start_at DateTime @default(now())
+  end_at   DateTime
+  status   Boolean  @default(true)
+}
+
+model Subscription {
+  id          String  @id @default(uuid())
+  name        String
+  price       Int
+  max_bot     Int
+  description String? @db.Text
+  benefit     String  @db.Text
+
+  status     Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
 }
 
 model Wallet {
@@ -105,6 +124,7 @@ model Trade {
   sl_price Float?
   pnl      Float   @default(0)
   reason   String?
+  summary  String? @db.Text
 
   open_time  DateTime  @default(now())
   close_time DateTime?
@@ -149,7 +169,7 @@ model Bot {
 
 model BotLog {
   id     String   @id @default(uuid())
-  reason String
+  reason String?  @db.Text
   date   DateTime @default(now())
   Bot    Bot      @relation(fields: [botId], references: [id])
   botId  String

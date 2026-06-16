@@ -26,11 +26,18 @@ import {
 import type { ColumnsType } from "antd/es/table";
 
 // Import interfaces dari file eksternal kamu
-import { IBot, EBotType } from "../libs/IInterfaces";
+import { IBot, EBotType, IPageProps } from "../libs/IInterfaces";
 import { Link } from "react-router-dom";
 
 export default function BotPage() {
-  const [bots, setBots] = useState<IBot[]>([]);
+  const [data, setData] = useState<IPageProps<IBot>>({
+    limit: 20,
+    page: 1,
+    search: null,
+    type: null,
+    data: [],
+    total: 0,
+  });
   const [loading, setLoading] = useState<boolean>(true);
 
   // State untuk Modal Form (Create & Edit)
@@ -38,17 +45,21 @@ export default function BotPage() {
   const [editingBot, setEditingBot] = useState<IBot | null>(null);
   const [form] = Form.useForm();
 
-  // State untuk Filter lokal
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [typeFilter, setTypeFilter] = useState<string>("ALL");
-
   // Fetch data bot
-  const fetchBots = async () => {
+  const getData = async () => {
+    const params = {
+      limit: data.limit,
+      page: data.page,
+      search: data.search,
+      type: data.type,
+    };
     try {
       setLoading(true);
-      const res = await fetch("/api/bot");
-      const { data } = await res.json();
-      setBots(data);
+      const res = await fetch(
+        "/api/bot?" + new URLSearchParams(params).toString(),
+      );
+      const { data, total } = await res.json();
+      setData((prev) => ({ ...prev, data, total }));
     } catch (error) {
       message.error("Gagal memuat data bot.");
     } finally {
@@ -57,8 +68,16 @@ export default function BotPage() {
   };
 
   useEffect(() => {
-    fetchBots();
+    (async () => {
+      await getData();
+    })();
   }, []);
+  useEffect(() => {
+    const timeout = setTimeout(async () => {
+      await getData();
+    }, 200);
+    return () => clearTimeout(timeout);
+  }, [data.page, data.limit, data.search, data.type]);
 
   // Handle Aktif/Nonaktif Bot via Switch
   const handleToggleActive = async (id: string, currentStatus: boolean) => {
@@ -74,9 +93,7 @@ export default function BotPage() {
       );
       if (!res.ok) throw new Error();
 
-      setBots((prev) =>
-        prev.map((b) => (b.id === id ? { ...b, active: nextStatus } : b)),
-      );
+      getData();
       message.success(`Bot ${nextStatus ? "diaktifkan" : "dinonaktifkan"}`);
     } catch {
       message.error("Gagal mengubah status bot.");
@@ -119,7 +136,7 @@ export default function BotPage() {
         `Bot berhasil ${editingBot ? "diperbarui" : "ditambahkan"}`,
       );
       setIsModalOpen(false);
-      fetchBots(); // Refresh data
+      getData(); // Refresh data
     } catch (error) {
       message.error("Gagal menyimpan data bot. Periksa kembali form Anda.");
     }
@@ -132,7 +149,7 @@ export default function BotPage() {
       if (!res.ok) throw new Error();
 
       message.success("Bot berhasil dihapus.");
-      setBots((prev) => prev.filter((b) => b.id !== id));
+      getData();
     } catch {
       message.error("Gagal menghapus bot.");
     }
@@ -151,17 +168,6 @@ export default function BotPage() {
       </Tag>
     );
   };
-
-  // Filter logika untuk search bar dan dropdown
-  const filteredBots = bots.filter((bot) => {
-    const matchSearch =
-      bot.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (bot.description &&
-        bot.description.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchType =
-      typeFilter === "ALL" || bot.type === (typeFilter as unknown as EBotType);
-    return matchSearch && matchType;
-  });
 
   // ==========================================
   // STRUKTUR TABEL MANAJEMEN
@@ -294,15 +300,16 @@ export default function BotPage() {
           prefix={<Search size={14} className="text-slate-400" />}
           className="max-w-xs rounded-lg"
           allowClear
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          value={data.search}
+          onChange={(e) =>
+            setData((prev) => ({ ...prev, search: e.target.value }))
+          }
         />
         <Select
           defaultValue="ALL"
           className="w-40"
-          onChange={(value) => setTypeFilter(value)}
+          onChange={(value) => setData((prev) => ({ ...prev, type: value }))}
           options={[
-            { value: "ALL", label: "Semua Tipe Strategi" },
             { value: EBotType.SMC, label: "Smart Money (SMC)" },
             { value: EBotType.TRADING, label: "Standard Trading" },
             { value: EBotType.SCANNER, label: "Market Scanner" },
@@ -312,11 +319,11 @@ export default function BotPage() {
 
       {/* MAIN TABLE */}
       <Table
-        dataSource={filteredBots}
+        dataSource={data.data}
         columns={columns}
         rowKey="id"
         loading={loading}
-        pagination={{ pageSize: 8 }}
+        pagination={{ pageSize: 5 }}
         className="border border-slate-100 rounded-xl overflow-hidden"
         scroll={{ x: true }}
       />

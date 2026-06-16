@@ -5,7 +5,15 @@ import moment from "moment";
 import prisma from "../../libs/prisma.js";
 
 export const GET = async (req: Request, res: Response) => {
-  let { page = 1, limit = 100, pairId, search, backdate, status } = req.query;
+  let {
+    page = 1,
+    limit = 100,
+    pairId,
+    search,
+    backdate,
+    status,
+    botId,
+  } = req.query;
   page = Number(page);
   limit = Number(limit);
   const skip = (page - 1) * limit;
@@ -13,6 +21,7 @@ export const GET = async (req: Request, res: Response) => {
   try {
     const where: Prisma.TradeWhereInput = {
       ...(pairId && { pairId: pairId as string }),
+      ...(botId && { botId: botId as string }),
       ...(status && { close_time: status === "active" ? { not: null } : null }),
       ...(backdate && {
         open_time: {
@@ -38,18 +47,25 @@ export const GET = async (req: Request, res: Response) => {
         },
       },
     });
-    const profit = data
-      .filter((d) => d.pnl > 0)
-      .reduce((acc, curr) => acc + curr.pnl, 0);
-    const loss = data
+    const all = await prisma.trade.findMany({ where });
+
+    const total = await prisma.trade.count({ where });
+    const profit = all.filter((d) => d.pnl > 0);
+    const loss = all
       .filter((d) => d.pnl < 0)
       .reduce((acc, curr) => acc + curr.pnl, 0);
+    const closeds = all.filter((d) => d.close_time !== null);
+    const actives = all.filter((d) => d.close_time == null);
 
     return ResponseServer(res, 200, {
       data,
+      total,
       profit,
       loss,
-      pnl: profit - loss,
+      pnl: profit.reduce((acc, curr) => acc + curr.pnl, 0) - loss,
+      actives,
+      closeds,
+      winrate: profit.length / closeds.length,
     });
   } catch (err) {
     console.log(err);
