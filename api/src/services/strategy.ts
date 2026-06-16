@@ -23,268 +23,6 @@ import {
   StockHasticCross,
 } from "./signal.js";
 
-// export const FirstStrategy = async (
-//   symbol: string,
-//   c1: IGetCandles,
-//   c2: IGetCandles,
-// ): Promise<ITrade | null> => {
-//   const ema20 = CalculateEMA(c1.closes, 20);
-//   const ema50 = CalculateEMA(c1.closes, 50);
-//   const ema200 = CalculateEMA(c1.closes, 200);
-//   const rsi14 = CalculateRSI(c1.closes, 14);
-//   const atr14 = CalculateATR(c1.highs, c1.lows, c1.closes, 14);
-//   const stockRSI = CalculateStockRSI(c1.closes, 14, 14, 3, 3);
-//   const stochRsiK = stockRSI.map((d) => d.k);
-//   const stochRsiD = stockRSI.map((d) => d.d);
-//   const close = LastNumber(c1.closes);
-//   // const prevclose = c1.closes.at(-2) || 0;
-
-//   const emaFast = LastNumber(ema20);
-//   const emaMid = LastNumber(ema50);
-//   const emaSlow = LastNumber(ema200);
-//   const rsi = LastNumber(rsi14);
-
-//   // Trend confirmation
-//   const isMacroUptrend = PriceCross(close, emaSlow, "over");
-//   const isMacroDowntrend = PriceCross(close, emaSlow, "under");
-
-//   // EMA alignment for confluence
-//   const emaAgmBul =
-//     PriceCross(emaFast, emaMid, "over") && PriceCross(emaMid, emaSlow, "over");
-//   const emaAgmBear =
-//     PriceCross(emaFast, emaMid, "under") &&
-//     PriceCross(emaMid, emaSlow, "under");
-
-//   // RSI Strength
-//   const rsiStrBul = PriceCross(rsi, 45, "over") && PriceCross(rsi, 70, "under");
-//   const rsiStrBear =
-//     PriceCross(rsi, 55, "under") && PriceCross(rsi, 30, "over");
-
-//   // Stochastic cross
-//   const stochBul = StockHasticCross(
-//     { fast: stochRsiK.at(-1) || 0, slow: stochRsiK.at(-2) || 0 },
-//     { fast: stochRsiD.at(-1) || 0, slow: stochRsiD.at(-2) || 0 },
-//     { over: 40, under: 60 },
-//     "over",
-//   );
-//   const stochBear = StockHasticCross(
-//     { fast: stochRsiK.at(-1) || 0, slow: stochRsiK.at(-2) || 0 },
-//     { fast: stochRsiD.at(-1) || 0, slow: stochRsiD.at(-2) || 0 },
-//     { over: 40, under: 60 },
-//     "under",
-//   );
-
-//   // Trend Market
-//   const trendC1 = FindDefaultTrend(c1.opens, c1.highs, c1.lows, c1.closes);
-//   const trendC2 = FindDefaultTrend(c2.opens, c2.highs, c2.lows, c2.closes);
-
-//   // Volatility
-//   const atrPercent = ((atr14.at(-1) || 0) / close) * 100;
-//   const validVolatility = atrPercent >= 0.3 && atrPercent <= 1.5;
-
-//   const pullbackLong =
-//     close > emaMid && close >= emaFast * 0.995 && close <= emaFast * 1.01;
-//   const pullbackShort =
-//     close < emaMid && close <= emaFast * 1.005 && close >= emaFast * 0.99;
-
-//   const validLong =
-//     isMacroUptrend &&
-//     emaAgmBul &&
-//     rsiStrBul &&
-//     stochBul &&
-//     trendC1 === "LONG" &&
-//     trendC2 === "LONG" &&
-//     validVolatility &&
-//     pullbackLong;
-
-//   const validShort =
-//     isMacroDowntrend &&
-//     emaAgmBear &&
-//     rsiStrBear &&
-//     stochBear &&
-//     trendC1 === "SHORT" &&
-//     trendC2 === "SHORT" &&
-//     validVolatility &&
-//     pullbackShort;
-
-//   const signal = validLong ? "LONG" : validShort ? "SHORT" : "WAIT";
-//   const pricing = GetSLTPPrice(
-//     close,
-//     atr14.at(-1) || 0,
-//     signal === "LONG" ? "buy" : "sell",
-//   );
-
-//   if (signal !== "WAIT") {
-//     return {
-//       id: "",
-//       pairId: "",
-//       Pair: {
-//         name: symbol,
-//         id: "",
-//         status: true,
-//         created_at: new Date(),
-//         updated_at: new Date(),
-//       },
-//       side: signal === "LONG" ? "buy" : "sell",
-//       open_time: new Date(),
-//       open: pricing.open,
-//       amount: pricing.amount,
-//       sl_price: pricing.sl,
-//       tp_price: pricing.tp,
-//       pnl: 0,
-//       reason: null,
-//       lev: pricing.lev,
-//       close: null,
-//       close_time: null,
-//       botId: null,
-//     };
-//   }
-//   return null;
-// };
-
-// export const TwoStarategy = (
-//   symbol: string,
-//   c1: IGetCandles,
-//   c2: IGetCandles,
-// ): ITrade | null => {
-//   const ema20 = CalculateEMA(c1.closes, 20);
-//   const ema50 = CalculateEMA(c1.closes, 50);
-//   const ema200 = CalculateEMA(c1.closes, 200);
-//   const rsi14 = CalculateRSI(c1.closes, 14);
-//   const atr14 = CalculateATR(c1.highs, c1.lows, c1.closes, 14);
-//   const stockRSI = CalculateStockRSI(c1.closes, 14, 14, 3, 3);
-
-//   const stochRsiK = stockRSI.map((d) => d.k);
-//   const stochRsiD = stockRSI.map((d) => d.d);
-
-//   const close = LastNumber(c1.closes);
-//   const open = LastNumber(c1.opens);
-//   const emaFast = LastNumber(ema20);
-//   const emaMid = LastNumber(ema50);
-//   const emaSlow = LastNumber(ema200);
-//   const rsi = LastNumber(rsi14);
-//   const atr = LastNumber(atr14);
-
-//   const htfEma200 = CalculateEMA(c2.closes, 200);
-//   const htfEma50 = CalculateEMA(c2.closes, 50);
-//   const htfClose = LastNumber(c2.closes);
-//   const htfFast = LastNumber(htfEma50);
-//   const htfSlow = LastNumber(htfEma200);
-
-//   const htfTrendLong = htfClose > htfSlow && htfFast > htfSlow;
-
-//   const htfTrendShort = htfClose < htfSlow && htfFast < htfSlow;
-
-//   const emaBullish = emaFast > emaMid && emaMid > emaSlow;
-//   const emaBearish = emaFast < emaMid && emaMid < emaSlow;
-
-//   const rsiBullish = rsi > 50 && rsi < 72;
-//   const rsiBearish = rsi < 50 && rsi > 28;
-
-//   const stochBullish = StockHasticCross(
-//     { fast: stochRsiK.at(-1) || 0, slow: stochRsiK.at(-2) || 0 },
-//     { fast: stochRsiD.at(-1) || 0, slow: stochRsiD.at(-2) || 0 },
-//     { over: 40, under: 60 },
-//     "over",
-//   );
-
-//   const stochBearish = StockHasticCross(
-//     { fast: stochRsiK.at(-1) || 0, slow: stochRsiK.at(-2) || 0 },
-//     { fast: stochRsiD.at(-1) || 0, slow: stochRsiD.at(-2) || 0 },
-//     { over: 40, under: 60 },
-//     "under",
-//   );
-
-//   const atrPercent = (atr / close) * 100;
-//   const validVolatility = atrPercent >= 0.3 && atrPercent <= 1.8;
-
-//   const volumeSpike = isVolumeSpike(c1.volumes, 20, 1.2);
-//   const structure = getMarketStructure(c1.highs, c1.lows);
-
-//   const bullishDivergence = hasBullishDivergence(c1.lows, rsi14);
-//   const bearishDivergence = hasBearishDivergence(c1.highs, rsi14);
-
-//   const bullishCandle = close > open;
-//   const bearishCandle = close < open;
-//   const atrDistance = Math.abs(close - emaFast);
-//   const maxPullbackDistance = atr * 0.8;
-
-//   const pullbackLong = close > emaMid && atrDistance <= maxPullbackDistance;
-
-//   const pullbackShort = close < emaMid && atrDistance <= maxPullbackDistance;
-
-//   let longScore = 0;
-//   let shortScore = 0;
-
-//   if (htfTrendLong) longScore += 2;
-//   if (htfTrendShort) shortScore += 2;
-
-//   if (emaBullish) longScore += 2;
-//   if (emaBearish) shortScore += 2;
-
-//   if (close > emaSlow) longScore += 1;
-//   if (close < emaSlow) shortScore += 1;
-
-//   if (rsiBullish) longScore += 1;
-//   if (rsiBearish) shortScore += 1;
-
-//   if (stochBullish) longScore += 1;
-//   if (stochBearish) shortScore += 1;
-
-//   if (validVolatility) {
-//     longScore += 1;
-//     shortScore += 1;
-//   }
-
-//   if (volumeSpike) {
-//     longScore += 1;
-//     shortScore += 1;
-//   }
-
-//   if (structure === "BULLISH") longScore += 1;
-//   if (structure === "BEARISH") shortScore += 1;
-
-//   if (pullbackLong) longScore += 1;
-//   if (pullbackShort) shortScore += 1;
-
-//   if (bullishCandle) longScore += 1;
-//   if (bearishCandle) shortScore += 1;
-
-//   if (bearishDivergence) longScore -= 2;
-//   if (bullishDivergence) shortScore -= 2;
-//   const validLong = longScore >= 10 && longScore > shortScore;
-//   const validShort = shortScore >= 10 && shortScore > longScore;
-//   const signal = validLong ? "LONG" : validShort ? "SHORT" : "WAIT";
-
-//   if (signal === "WAIT") return null;
-
-//   const pricing = GetSLTPPrice(close, atr, signal === "LONG" ? "buy" : "sell");
-
-//   return {
-//     id: "",
-//     pairId: "",
-//     Pair: {
-//       name: symbol,
-//       id: "",
-//       status: true,
-//       created_at: new Date(),
-//       updated_at: new Date(),
-//     },
-//     side: signal === "LONG" ? "buy" : "sell",
-//     open_time: new Date(),
-//     open: pricing.open,
-//     amount: pricing.amount,
-//     sl_price: pricing.sl,
-//     tp_price: pricing.tp,
-//     pnl: 0,
-//     reason: null,
-//     lev: pricing.lev,
-//     close: null,
-//     close_time: null,
-//     botId: null,
-//   };
-// };
-
 export const ThirdStarategy = (
   symbol: string,
   c1: IGetCandles,
@@ -350,8 +88,8 @@ export const ThirdStarategy = (
   if (!htfClose || !htfFast || !htfSlow) return null;
 
   // 5. Kondisi Filter Utama (Arah Tren Besar)
-  const htfTrendLong = htfClose > htfSlow && htfFast > htfSlow;
-  const htfTrendShort = htfClose < htfSlow && htfFast < htfSlow;
+  const htfTrendLong = htfClose > htfSlow && htfFast >= htfSlow * 0.995;
+  const htfTrendShort = htfClose < htfSlow && htfFast <= htfSlow * 1.005;
 
   const emaBullish = emaFast > emaMid && emaMid > emaSlow;
   const emaBearish = emaFast < emaMid && emaMid < emaSlow;
@@ -380,7 +118,7 @@ export const ThirdStarategy = (
   // 7. Filter Volatilitas & Volume Spike
   const atrPercent = (atr / close) * 100;
   const validVolatility = atrPercent >= 0.1 && atrPercent <= 1.2;
-  const volumeSpike = isVolumeSpike(c1.volumes, 20, 1.5);
+  const volumeSpike = isVolumeSpike(c1.volumes, 20, 1);
   if (!validVolatility || !volumeSpike) return null;
 
   // 8. Struktur Market & Divergence
@@ -399,19 +137,22 @@ export const ThirdStarategy = (
     close < open && candleBody >= candleRange * 0.4 && close < emaFast;
 
   const pullbackLong =
-    close > emaMid &&
-    close >= emaFast &&
-    Math.abs(close - emaFast) <= atr * 1.4;
+    close > emaMid && low <= emaFast + atr * 0.3 && close > emaFast - atr * 0.2;
   const pullbackShort =
     close < emaMid &&
-    close <= emaFast &&
-    Math.abs(close - emaFast) <= atr * 1.4;
+    high >= emaFast - atr * 0.3 &&
+    close < emaFast + atr * 0.2;
 
   // ==========================================
   // 10. CONFLUENCE MATRIX SCORING (DIOPTIMALKAN)
   // ==========================================
   let longScore = 0;
   let shortScore = 0;
+
+  if (volumeSpike) {
+    longScore += 1;
+    shortScore += 1;
+  }
 
   if (htfTrendLong) longScore += 2;
   if (htfTrendShort) shortScore += 2;
@@ -459,17 +200,17 @@ export const ThirdStarategy = (
   // ==========================================
   // Menggunakan sistem murni gabungan passing score & syarat wajib tren makro
   const validLong =
-    longScore >= 6 &&
+    longScore >= 5 &&
     longScore > shortScore &&
-    htfTrendLong && // Tren makro wajib searah
-    longTriggerCount >= 1 && // Minimal ada 1 trigger aktif pengeksekusi
+    htfTrendLong &&
+    longTriggerCount >= 1 &&
     !bearishDivergence;
 
   const validShort =
-    shortScore >= 6 &&
+    shortScore >= 5 &&
     shortScore > longScore &&
-    htfTrendShort && // Tren makro wajib searah
-    shortTriggerCount >= 1 && // Minimal ada 1 trigger aktif pengeksekusi
+    htfTrendShort &&
+    shortTriggerCount >= 1 &&
     !bullishDivergence;
 
   const signal = validLong ? "LONG" : validShort ? "SHORT" : "WAIT";
@@ -555,7 +296,7 @@ export const MeanReversionStrategy = (
   // 3. Kondisi Jenuh (RSI) & Toleransi Band Touch
   const oversoldRSI = rsi <= 35;
   const overboughtRSI = rsi >= 65;
-  const bandTolerance = atr * 0.2;
+  const bandTolerance = atr * 0.08;
 
   const touchLowerBand = low <= lowerBand + bandTolerance;
   const touchUpperBand = high >= upperBand - bandTolerance;
@@ -574,19 +315,21 @@ export const MeanReversionStrategy = (
 
   // Deteksi Rejection Terkonfirmasi (Sudah include Close di dalam Band & Reclaim)
   const bullishReject =
-    lowerWickRatio >= 0.35 &&
-    bodyRatio <= 0.55 &&
+    lowerWickRatio >= 0.4 &&
+    bodyRatio <= 0.45 &&
     close > open &&
     close > lowerBand;
   const bearishReject =
-    upperWickRatio >= 0.35 &&
-    bodyRatio <= 0.55 &&
+    upperWickRatio >= 0.4 &&
+    bodyRatio <= 0.45 &&
     close < open &&
     close < upperBand;
 
   // Reclaim standar (Tanpa wick panjang)
-  const standardReclaimLower = close > lowerBand && close > open;
-  const standardRejectUpper = close < upperBand && close < open;
+  const standardReclaimLower =
+    low <= lowerBand && close > lowerBand && close > open && bodyRatio >= 0.25;
+  const standardRejectUpper =
+    high >= upperBand && close < upperBand && close < open && bodyRatio >= 0.25;
 
   // 5. Filter HTF (DIPERBAIKI: Mencegah Repainting)
   let htfBullish = true;
@@ -602,16 +345,30 @@ export const MeanReversionStrategy = (
       htfBearish = htfClose <= ema200 * 1.005;
     }
   }
+  const prevClose = c1.closes[c1.closes.length - 2];
+  // const prevOpen = c1.opens[c1.opens.length - 2];
+  const bullishConfirmation = close > open && close > prevClose;
+  const bearishConfirmation = close < open && close < prevClose;
+
+  const ema50Arr = CalculateEMA(c1.closes, 50);
+  const ema50 = LastNumber(ema50Arr);
+  const notStrongDowntrend = close >= ema50 * 0.97;
+  const notStrongUptrend = close <= ema50 * 1.03;
 
   // 6. Penentuan Sinyal (DIPERBAIKI: Mengikuti Logika Komentar Asli Anda)
   // JIKA HTF Bullish -> Cukup Standard Reclaim. JIKA HTF Bearish -> Wajib Bullish Rejection Kuat.
   const validLong =
     oversoldRSI &&
     touchLowerBand &&
+    notStrongDowntrend &&
+    bullishConfirmation &&
     (htfBullish ? standardReclaimLower : bullishReject);
+
   const validShort =
     overboughtRSI &&
     touchUpperBand &&
+    notStrongUptrend &&
+    bearishConfirmation &&
     (htfBearish ? standardRejectUpper : bearishReject);
 
   const signal = validLong ? "LONG" : validShort ? "SHORT" : "WAIT";
@@ -653,9 +410,8 @@ export const MeanReversionStrategy = (
   const rewardPrice = Math.abs(takeProfitPrice - entryPrice);
   if (riskPrice <= 0 || rewardPrice <= 0) return null;
 
-  // Batasi minimal RR di angka yang lebih rasional untuk kesehatan akun (diubah ke 0.8)
   const rr = rewardPrice / riskPrice;
-  if (rr < 1.2) return null;
+  if (rr > 1.3) return null;
 
   // 8. Dynamic Position Sizing
   const riskUSDT = 10 * (RISK_PERCENT / 100);
@@ -758,13 +514,7 @@ export const RangeBreakoutCompressionStrategy = (
   // Bollinger Band Compression
   // ===============================
   const bbWidthRatio = (prevUpperBand - prevLowerBand) / prevMiddleBand;
-  if (bbWidthRatio > 0.035) return null;
-
-  // Untuk 5m crypto:
-  // <= 0.025 sangat ketat
-  // <= 0.035 normal compression
-  // <= 0.050 longgar
-  const isCompression = bbWidthRatio <= 0.035;
+  const isCompression = bbWidthRatio <= 0.045;
 
   if (!isCompression) return null;
 
@@ -784,10 +534,10 @@ export const RangeBreakoutCompressionStrategy = (
     const lower = lowerSlice[index];
     const middle = middleSlice[index];
     if (!upper || !lower || !middle || middle <= 0) return false;
-    return (upper - lower) / middle <= 0.04;
+    return (upper - lower) / middle <= 0.045;
   }).length;
 
-  if (compressionCount < 4) return null;
+  if (compressionCount < 3) return null;
 
   const volumePeriod = 20;
   const recentVolumes = c1.volumes.slice(-volumePeriod - 1, -1);
@@ -795,7 +545,7 @@ export const RangeBreakoutCompressionStrategy = (
 
   const avgVolume =
     recentVolumes.reduce((sum, v) => sum + v, 0) / recentVolumes.length;
-  if (avgVolume <= 0 || volume / avgVolume < 1.5) return null;
+  if (avgVolume <= 0 || volume / avgVolume < 1.2) return null;
 
   // 5. Price Range Breakout
   const rangeLookback = 20;
@@ -818,7 +568,7 @@ export const RangeBreakoutCompressionStrategy = (
   if (Math.abs(close - lastEma20) / close > 0.015) return null;
 
   // 8. Eksekusi Kondisi Breakout
-  const breakoutBuffer = prevAtr * 0.15;
+  const breakoutBuffer = prevAtr * 0.08;
   const bullishCandle = close > open;
   const bearishCandle = close < open;
 
@@ -837,10 +587,9 @@ export const RangeBreakoutCompressionStrategy = (
   if (!breakoutLong && !breakoutShort) return null;
 
   // 9. Trend Filter TF Utama
-  if (breakoutLong && !(close > lastEma20 && lastEma20 > lastEma50))
-    return null;
-  if (breakoutShort && !(close < lastEma20 && lastEma20 < lastEma50))
-    return null;
+  if (breakoutLong && !(close > lastEma20 && close > lastEma50)) return null;
+
+  if (breakoutShort && !(close < lastEma20 && close < lastEma50)) return null;
 
   // 10. Trend Filter HTF (DIPERBAIKI: Menggunakan index -2 untuk mencegah repainting)
   const htfEma20 = CalculateEMA(c2.closes, 20);
@@ -854,6 +603,8 @@ export const RangeBreakoutCompressionStrategy = (
 
   const htfBullish = htfClose > lastHtfEma20 && lastHtfEma20 > lastHtfEma50;
   const htfBearish = htfClose < lastHtfEma20 && lastHtfEma20 < lastHtfEma50;
+  // const htfBullish = htfClose > lastHtfEma20 || htfClose > lastHtfEma50;
+  // const htfBearish = htfClose < lastHtfEma20 || htfClose < lastHtfEma50;
 
   const signal =
     breakoutLong && htfBullish
@@ -870,23 +621,23 @@ export const RangeBreakoutCompressionStrategy = (
 
   if (signal === "LONG") {
     // PERBAIKAN: SL diletakkan di bawah garis tengah BB atau di bawah lower range untuk keamanan dari retest
-    const safeSupport = Math.min(prevMiddleBand, prevLowRange);
-    stopLossPrice = safeSupport - prevAtr * 0.2;
+    // const safeSupport = Math.min(prevMiddleBand, prevLowRange);
+    stopLossPrice = Math.min(prevUpperBand, prevHighRange) - prevAtr * 0.8;
 
     const risk = entryPrice - stopLossPrice;
     if (risk <= 0) return null;
 
     // Menaikkan Reward Ratio ke 1:2 karena strategi breakout membutuhkan RR tinggi untuk menutup akurasi yang rendah
-    takeProfitPrice = entryPrice + risk * 2.0;
+    takeProfitPrice = entryPrice + risk * 1.5;
   } else {
     // PERBAIKAN: SL diletakkan di atas garis tengah BB atau di atas upper range
-    const safeResistance = Math.max(prevMiddleBand, prevHighRange);
-    stopLossPrice = safeResistance + prevAtr * 0.2;
+    // const safeResistance = Math.max(prevMiddleBand, prevHighRange);
+    stopLossPrice = Math.max(prevLowerBand, prevLowRange) + prevAtr * 0.8;
 
     const risk = stopLossPrice - entryPrice;
     if (risk <= 0) return null;
 
-    takeProfitPrice = entryPrice - risk * 2.0;
+    takeProfitPrice = entryPrice - risk * 1.5;
   }
 
   const riskPrice = Math.abs(entryPrice - stopLossPrice);

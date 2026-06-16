@@ -19,7 +19,7 @@ import { ValidatePumpScanner } from "./services/scanner.js";
     async () => {
       await ValidatePumpScanner();
     },
-    1000 * 60 * 60 * 4,
+    1000 * 60 * 3,
   );
 })();
 

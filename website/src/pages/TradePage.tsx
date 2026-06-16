@@ -30,6 +30,7 @@ export default function TradeHistory() {
     total: 0,
     page: 1,
     winrate: 0,
+    pnl: 0,
     actives: 0,
     closeds: 0,
     limit: 20,
@@ -54,6 +55,7 @@ export default function TradeHistory() {
           winrate: res.winrate,
           actives: res.actives.length,
           closeds: res.closeds.length,
+          pnl: res.pnl,
         })),
       );
     setLoading(false);
