@@ -655,7 +655,7 @@ export const MeanReversionStrategy = (
 
   // Batasi minimal RR di angka yang lebih rasional untuk kesehatan akun (diubah ke 0.8)
   const rr = rewardPrice / riskPrice;
-  if (rr < 0.8) return null;
+  if (rr < 1.2) return null;
 
   // 8. Dynamic Position Sizing
   const riskUSDT = 10 * (RISK_PERCENT / 100);

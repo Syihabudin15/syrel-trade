@@ -7,10 +7,8 @@ import {
   Col,
   Statistic,
   Input,
-  Select,
   Tooltip,
   Badge,
-  message,
 } from "antd";
 import {
   Search,
@@ -38,12 +36,6 @@ export default function TradeHistory() {
     search: "",
   });
   const [loading, setLoading] = useState<boolean>(true);
-
-  // State untuk Filter & Pencarian
-  const [searchPair, setSearchPair] = useState<string>("");
-  const [sideFilter, setSideFilter] = useState<string>("ALL");
-  const [botTypeFilter, setBotTypeFilter] = useState<string>("ALL");
-  const [statusFilter, setStatusFilter] = useState<string>("ALL");
 
   const getData = async () => {
     setLoading(true);
@@ -381,7 +373,7 @@ export default function TradeHistory() {
             prefix={<Search size={15} className="text-slate-400" />}
             className="w-full sm:w-56 rounded-lg"
             allowClear
-            value={searchPair}
+            value={data.search}
             onChange={(e) =>
               setData((prev) => ({ ...prev, search: e.target.value }))
             }
