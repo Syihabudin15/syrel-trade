@@ -131,41 +131,37 @@ export const ValidateActiveTrades = async () => {
         const hitTP = ticker >= trade.tp_price;
         const hitSL = ticker <= trade.sl_price;
 
-        if (hitTP || hitSL) {
-          const closePrice = hitTP ? trade.tp_price : trade.sl_price;
-          const closeReason = hitTP ? "TP" : "SL";
+        const closePrice = hitTP ? trade.tp_price : trade.sl_price;
+        const closeReason = hitTP ? "TP" : "SL";
 
-          updated.push({
-            ...trade,
-            close: closePrice,
-            close_time: new Date(),
-            reason: closeReason,
-            pnl: CalcPnl(trade.side, trade.open, closePrice, trade.amount),
-          });
-        }
+        updated.push({
+          ...trade,
+          close: hitTP || hitSL ? closePrice : 0,
+          close_time: hitTP || hitSL ? new Date() : null,
+          reason: hitTP || hitSL ? closeReason : null,
+          pnl: CalcPnl(trade.side, trade.open, closePrice, trade.amount),
+        });
       }
 
       if (trade.side === "sell") {
         const hitTP = ticker <= trade.tp_price;
         const hitSL = ticker >= trade.sl_price;
 
-        if (hitTP || hitSL) {
-          const closePrice = hitTP ? trade.tp_price : trade.sl_price;
-          const closeReason = hitTP ? "TP" : "SL";
+        const closePrice = hitTP ? trade.tp_price : trade.sl_price;
+        const closeReason = hitTP ? "TP" : "SL";
 
-          updated.push({
-            ...trade,
-            close: closePrice,
-            close_time: new Date(),
-            reason: closeReason,
-            pnl: CalcPnl(
-              trade.side as "buy" | "sell",
-              trade.open,
-              closePrice,
-              trade.amount,
-            ),
-          });
-        }
+        updated.push({
+          ...trade,
+          close: hitTP || hitSL ? closePrice : 0,
+          close_time: hitTP || hitSL ? new Date() : null,
+          reason: hitTP || hitSL ? closeReason : null,
+          pnl: CalcPnl(
+            trade.side as "buy" | "sell",
+            trade.open,
+            closePrice,
+            trade.amount,
+          ),
+        });
       }
     }
     if (updated.length !== 0) {
