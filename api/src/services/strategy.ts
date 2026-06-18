@@ -6,6 +6,7 @@ import {
   CalculateEMA,
   CalculateRSI,
   CalculateStockRSI,
+  CalculateTrend,
   CalculateVWAPV2,
 } from "../libs/indicators.js";
 import type { IGetCandles, IPumpScanner, ITrade } from "../libs/interfaces.js";
@@ -200,14 +201,14 @@ export const ThirdStarategy = (
   // ==========================================
   // Menggunakan sistem murni gabungan passing score & syarat wajib tren makro
   const validLong =
-    longScore >= 5 &&
+    longScore >= 2 &&
     longScore > shortScore &&
     htfTrendLong &&
     longTriggerCount >= 1 &&
     !bearishDivergence;
 
   const validShort =
-    shortScore >= 5 &&
+    shortScore >= 2 &&
     shortScore > longScore &&
     htfTrendShort &&
     shortTriggerCount >= 1 &&
@@ -355,6 +356,8 @@ export const MeanReversionStrategy = (
   const notStrongDowntrend = close >= ema50 * 0.97;
   const notStrongUptrend = close <= ema50 * 1.03;
 
+  const htfTrend = CalculateTrend(c1.opens, c1.highs, c1.lows, c1.closes);
+
   // 6. Penentuan Sinyal (DIPERBAIKI: Mengikuti Logika Komentar Asli Anda)
   // JIKA HTF Bullish -> Cukup Standard Reclaim. JIKA HTF Bearish -> Wajib Bullish Rejection Kuat.
   const validLong =
@@ -362,6 +365,7 @@ export const MeanReversionStrategy = (
     touchLowerBand &&
     notStrongDowntrend &&
     bullishConfirmation &&
+    htfTrend === "LONG" &&
     (htfBullish ? standardReclaimLower : bullishReject);
 
   const validShort =
@@ -369,6 +373,7 @@ export const MeanReversionStrategy = (
     touchUpperBand &&
     notStrongUptrend &&
     bearishConfirmation &&
+    htfTrend === "SHORT" &&
     (htfBearish ? standardRejectUpper : bearishReject);
 
   const signal = validLong ? "LONG" : validShort ? "SHORT" : "WAIT";
@@ -603,13 +608,14 @@ export const RangeBreakoutCompressionStrategy = (
 
   const htfBullish = htfClose > lastHtfEma20 && lastHtfEma20 > lastHtfEma50;
   const htfBearish = htfClose < lastHtfEma20 && lastHtfEma20 < lastHtfEma50;
+  const htfTrend = CalculateTrend(c1.opens, c1.highs, c1.lows, c1.closes);
   // const htfBullish = htfClose > lastHtfEma20 || htfClose > lastHtfEma50;
   // const htfBearish = htfClose < lastHtfEma20 || htfClose < lastHtfEma50;
 
   const signal =
-    breakoutLong && htfBullish
+    breakoutLong && htfBullish && htfTrend === "LONG"
       ? "LONG"
-      : breakoutShort && htfBearish
+      : breakoutShort && htfBearish && htfTrend === "SHORT"
         ? "SHORT"
         : "WAIT";
   if (signal === "WAIT") return null;

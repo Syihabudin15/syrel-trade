@@ -1,13 +1,12 @@
-import type { PumpScanner } from "@prisma/client";
 import type { IPumpScanner } from "../libs/interfaces.js";
 import prisma from "../libs/prisma.js";
 import { GetCurrentPrice } from "../libs/exchange.js";
 import { SendTelegramMessage } from "../libs/messages.js";
 
 export const CreatePumpScanner = async (data: IPumpScanner[]) => {
-  const pumps: PumpScanner[] = [];
+  const pumps = [];
   for (const record of data) {
-    const { Bot, Pair, ...saved } = record;
+    const { id, Bot, Pair, ...saved } = record;
     const findOrSavePair = await prisma.pair.upsert({
       where: { name: Pair.name },
       update: {},
